@@ -1,3 +1,4 @@
+// controller/login/login.js
 const bcrypt = require('bcrypt');
 const connection = require('../../connection/connection');
 const { generateAccessToken } = require('../../utils/jwtUtils');
@@ -26,6 +27,7 @@ const login = (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Invalidate previous active tokens for this admin (single-session behavior)
     connection.query(
       'UPDATE active_tokens SET is_blacklisted = 1 WHERE admin_id = ? AND is_blacklisted = 0',
       [admin.id]
@@ -42,14 +44,26 @@ const login = (req, res) => {
         if (err) {
           return res.status(500).json({ error: 'Failed to create session' });
         }
-        res.json({ accessToken, admin: { id: admin.id, name: admin.name, email: admin.email } });
+        // Return the role too so frontend can adapt UI
+        res.json({
+          accessToken,
+          admin: {
+            id: admin.id,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role || 'client', // default fallback
+            status: admin.status,
+            img: admin.img || null
+          }
+        });
       }
     );
   });
 };
 
 const refreshToken = (req, res) => {
-  const { jti, id: adminId } = req.admin;
+  const decoded = req.admin; // verifyToken now attaches decoded token
+  const { jti, id: adminId } = decoded;
   const ip = req.ip || '127.0.0.1';
   const userAgent = req.headers['user-agent'] || '';
 
@@ -96,7 +110,8 @@ const refreshToken = (req, res) => {
 };
 
 const updateActivity = (req, res) => {
-  const { jti, id: adminId } = req.admin;
+  const decoded = req.admin;
+  const { jti, id: adminId } = decoded;
   const now = new Date();
 
   connection.query(
@@ -112,7 +127,8 @@ const updateActivity = (req, res) => {
 };
 
 const logout = (req, res) => {
-  const { jti, id: adminId } = req.admin;
+  const decoded = req.admin;
+  const { jti, id: adminId } = decoded;
   connection.query(
     'UPDATE active_tokens SET is_blacklisted = 1 WHERE token_id = ? AND admin_id = ?',
     [jti, adminId],
@@ -132,7 +148,7 @@ const getAgencyById = (req, res) => {
   }
 
   connection.query(
-    'SELECT id, name, email, number, img ,status, createdat, updatedat FROM admin WHERE id = ?',
+    'SELECT id, name, email, number, img ,status, createdat, updatedat, role FROM admin WHERE id = ?',
     [id],
     (err, results) => {
       if (err) {
@@ -146,6 +162,7 @@ const getAgencyById = (req, res) => {
   );
 };
 
+// addClient, getClient, updateClient, deleteClient left as-is (you may protect them with authorizeRole middleware)
 const addClient = async (req, res) => {
   const { name, email, number, password, status } = req.body;
 
@@ -225,5 +242,5 @@ module.exports = {
   addClient,
   getClient,
   updateClient,
-   deleteClient
+  deleteClient
 };

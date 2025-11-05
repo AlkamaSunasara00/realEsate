@@ -1,15 +1,11 @@
-// Sidebar.jsx
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { RxDashboard } from 'react-icons/rx';
-import { RiAdminLine, RiCoupon2Line, RiProductHuntLine } from 'react-icons/ri';
-import { LuUsers } from 'react-icons/lu';
+import { RiAdminLine } from 'react-icons/ri';
 import { FiLogOut } from 'react-icons/fi';
-import { IoGiftOutline } from 'react-icons/io5';
-import { MdOutlineCategory } from 'react-icons/md';
 import '../../../assets/css/admin/sidebar.css';
 
-const Sidebar = ({ onLogout }) => {
+const Sidebar = ({ admin, onLogout }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,25 +14,42 @@ const Sidebar = ({ onLogout }) => {
     }
   };
 
+  const role = admin?.role || 'client'; // default to 'client' if not present
+
   return (
     <aside className="admin-dashboard-sidebar">
       <div className="admin-sidebar-logo">
         <h4>XCART</h4>
+        {admin?.name && <div className="sidebar-user-name">{admin.name}</div>}
+        {admin?.role && <div className="sidebar-user-role">{admin.role}</div>}
       </div>
+
       <nav className="menu-content">
         <h6>MENU</h6>
         <ul>
           <li>
             <NavLink to="/admin/dashboard">
               <RxDashboard />
-              Dashboard
+              <span>Dashboard</span>
             </NavLink>
           </li>
         </ul>
       </nav>
+
       <nav className="menu-content">
         <h6>USER MANAGEMENT</h6>
         <ul>
+<<<<<<< HEAD
+          {/* Only show Manage Admins to actual admins */}
+          {role === 'admin' && (
+            <li>
+              <NavLink to="/admin/manage-admins">
+                <RiAdminLine />
+                <span>Manage Admins</span>
+              </NavLink>
+            </li>
+          )}
+=======
           <li>
             <NavLink to="/admin/property">
               <RiAdminLine />
@@ -49,13 +62,15 @@ const Sidebar = ({ onLogout }) => {
               Manage Admins
             </NavLink>
           </li>
+>>>>>>> 0f8741c931f55df5952de0b87cde1a16f85fd10c
         </ul>
       </nav>
+
       <div className="menu-content">
         <h6>OTHERS</h6>
-        <button onClick={handleLogout}>
+        <button onClick={handleLogout} className="sidebar-logout-btn">
           <FiLogOut />
-          Logout
+          <span>Logout</span>
         </button>
       </div>
     </aside>

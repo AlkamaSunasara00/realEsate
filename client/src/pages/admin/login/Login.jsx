@@ -1,3 +1,4 @@
+// src/pages/admin/login/Login.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../../../api/axiosInstance';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -12,8 +13,12 @@ const Login = () => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user')) || {};
     const adminId = userData.id;
-    const isLoggedIn = adminId ? localStorage.getItem(`isLoggedIn_${adminId}`) : null;
-    const token = adminId ? localStorage.getItem(`accessToken_${adminId}`) : localStorage.getItem('accessToken');
+    const isLoggedIn = adminId
+      ? localStorage.getItem(`isLoggedIn_${adminId}`)
+      : null;
+    const token = adminId
+      ? localStorage.getItem(`accessToken_${adminId}`)
+      : localStorage.getItem('accessToken');
 
     if (token && isLoggedIn === 'true') {
       navigate('/admin/dashboard', { replace: true });
@@ -35,21 +40,47 @@ const Login = () => {
     setMessage('');
 
     try {
+      // IMPORTANT: axios baseURL already includes '/admin', so call '/login' (not '/admin/login')
       const res = await api.post('/login', loginInfo);
 
-      const adminId = res.data.admin.id;
-      localStorage.setItem(`accessToken_${adminId}`, res.data.accessToken);
-      localStorage.setItem(`user_${adminId}`, JSON.stringify(res.data.admin));
+      const admin = res.data.admin;
+      const accessToken = res.data.accessToken || res.data.token || null;
+      if (!admin || !accessToken) {
+        throw new Error('Invalid server response: missing admin or token');
+      }
+
+      const adminId = admin.id;
+
+      // per-admin keys
+      localStorage.setItem(`accessToken_${adminId}`, accessToken);
+      localStorage.setItem(`user_${adminId}`, JSON.stringify(admin));
       localStorage.setItem(`isLoggedIn_${adminId}`, 'true');
       localStorage.setItem(`lastActivityUpdate_${adminId}`, Date.now());
-      localStorage.setItem('accessToken', res.data.accessToken); // Backward compatibility
-      localStorage.setItem('user', JSON.stringify(res.data.admin));
+
+      // backward compatibility/global keys
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('user', JSON.stringify(admin));
       localStorage.setItem('isLoggedIn', 'true');
 
+      // navigate to dashboard
       navigate('/admin/dashboard', { replace: true });
     } catch (error) {
-      const errorMessage = error?.response?.data?.error || 'Login failed. Please try again.';
-      console.error('Login error:', error.response?.data || error.message);
+      // extract meaningful error message if possible
+      const serverError = error?.response?.data;
+      let errorMessage = 'Login failed. Please try again.';
+
+      if (serverError) {
+        // if server returned an object with error field
+        if (typeof serverError === 'object' && serverError.error) {
+          errorMessage = serverError.error;
+        } else if (typeof serverError === 'string') {
+          errorMessage = serverError;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      console.error('Login error:', error?.response || errorMessage);
       setMessage(errorMessage);
     } finally {
       setLoading(false);
@@ -60,7 +91,9 @@ const Login = () => {
     <div className="all-login">
       <div className="loginn wrap">
         <h1 className="h1" id="login">Admin Login</h1>
+
         {message && <div style={{ color: 'red', marginBottom: '10px' }}>{message}</div>}
+
         <form onSubmit={handleSubmit}>
           <input
             name="identifier"

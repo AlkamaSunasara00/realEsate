@@ -1,3 +1,4 @@
+// middleware/verifyToken.js
 const jwt = require('jsonwebtoken');
 const connection = require('../connection/connection');
 const { ACCESS_TOKEN_SECRET } = require('../utils/jwtUtils');
@@ -11,7 +12,7 @@ const verifyToken = (req, res, next) => {
   jwt.verify(token, ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) return res.status(401).json({ error: 'Invalid or expired token' });
 
-    const { jti, id: adminId } = decoded; // Ensure adminId is extracted
+    const { jti, id: adminId } = decoded; // decoded has id & jti & role & status
     connection.query(
       'SELECT * FROM active_tokens WHERE token_id = ? AND admin_id = ? AND is_blacklisted = 0',
       [jti, adminId],
@@ -19,7 +20,8 @@ const verifyToken = (req, res, next) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         if (results.length === 0) return res.status(401).json({ error: 'Token has been invalidated' });
 
-        req.admin = { id: adminId, jti }; // Pass admin ID to req.admin
+        // Attach full decoded token to req.admin so handlers can access role, status, jti, id, etc.
+        req.admin = decoded;
         next();
       }
     );

@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -21,4 +22,3 @@ cleanUpExpiredToken()
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
