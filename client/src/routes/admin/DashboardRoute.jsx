@@ -9,14 +9,18 @@ import AddNewAdmin from "../../pages/admin/manage_admin/AddNewAdmin";
 import ProtectedRoute from "../../components/PrivateRoute";
 import useAuthRefresh from '../../hooks/useAuthRefresh';
 import EditAdmin from "../../pages/admin/manage_admin/EditAdmin";
+
 import "../../assets/css/admin/product.css"
+import UpdateProperty from "../../pages/admin/properties/UpdateProperty";
+import AddProperty from "../../pages/admin/properties/AddProperty";
+import Properties from "../../pages/admin/properties/Property";
 
 const AppRoutes = () => {
 
-    const Navigate=useNavigate()
+  const Navigate = useNavigate()
 
   useAuthRefresh();
-  
+
   return (
     <Routes>
       <Route path="/admin/login" element={<Login />} />
@@ -32,6 +36,9 @@ const AppRoutes = () => {
         <Route path="manage-admins" element={<ManageAdmin />} />
         <Route path="add-new_admin" element={<AddNewAdmin />} />
         <Route path="edit-admin/:id" element={<EditAdmin />} />
+        <Route path='property' element={<Properties />} />
+        <Route path='addproperty' element={<AddProperty />} />
+        <Route path='updateproperty' element={<UpdateProperty />} />
       </Route>
       <Route path="*" element={<Navigate to="/admin/login" replace />} />
     </Routes>

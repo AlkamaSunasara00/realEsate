@@ -38,6 +38,12 @@ const Sidebar = ({ onLogout }) => {
         <h6>USER MANAGEMENT</h6>
         <ul>
           <li>
+            <NavLink to="/admin/property">
+              <RiAdminLine />
+              Properties
+            </NavLink>
+          </li>
+          <li>
             <NavLink to="/admin/manage-admins">
               <RiAdminLine />
               Manage Admins
