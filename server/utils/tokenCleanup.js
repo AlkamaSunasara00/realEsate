@@ -10,7 +10,7 @@ const cleanupExpiredTokens = () => {
       if (err) {
         console.error('Error cleaning up expired tokens:', err);
       } else {
-        console.log(`Cleaned up ${result.affectedRows} expired tokens`);
+        console.log(`Cleaned up ${result.affectedRows} expired tokenss`);
       }
     }
   );
