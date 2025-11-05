@@ -71,36 +71,27 @@ const refreshToken = (req, res) => {
     'SELECT * FROM active_tokens WHERE token_id = ? AND admin_id = ? AND is_blacklisted = 0',
     [jti, adminId],
     (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (results.length === 0) {
-        return res.status(401).json({ error: 'Token invalidated or not found' });
-      }
+      if (err) return res.status(500).json({ error: 'Database error' });
+      if (results.length === 0) return res.status(401).json({ error: 'Session not found or invalid' });
 
       const tokenData = results[0];
       const now = new Date();
-      const issuedAt = new Date(tokenData.issued_at);
       const lastActivity = new Date(tokenData.last_activity);
-      const timeSinceIssue = now - issuedAt;
-      const activityDiff = lastActivity - issuedAt;
 
-      if (timeSinceIssue < 13 * 60 * 1000) {
-        return res.json({ accessToken: req.headers['authorization'].split(' ')[1] });
-      }
-
-      if (activityDiff < 1000) {
+      // **SLIDING SESSION CHECK**
+      if (now - lastActivity > 15 * 60 * 1000) {
         connection.query('UPDATE active_tokens SET is_blacklisted = 1 WHERE token_id = ?', [jti]);
-        return res.status(401).json({ error: 'No activity detected, session expired' });
+        return res.status(401).json({ error: 'Session expired due to inactivity' });
       }
 
       connection.query('SELECT * FROM admin WHERE id = ?', [adminId], (err, adminResults) => {
-        if (err || adminResults.length === 0) {
-          return res.status(401).json({ error: 'User not found' });
-        }
+        if (err || adminResults.length === 0) return res.status(401).json({ error: 'User not found' });
 
         const admin = adminResults[0];
+
+        // Current token invalidate
         connection.query('UPDATE active_tokens SET is_blacklisted = 1 WHERE token_id = ?', [jti], () => {
+
           const { token: newToken, jti: newJti } = generateAccessToken(admin, ip, userAgent);
           const newExpires = new Date(now.getTime() + 15 * 60 * 1000);
 
@@ -108,9 +99,7 @@ const refreshToken = (req, res) => {
             'INSERT INTO active_tokens (token_id, admin_id, ip_address, user_agent, issued_at, last_activity, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [newJti, adminId, ip, userAgent, now, now, newExpires],
             (err) => {
-              if (err) {
-                return res.status(500).json({ error: 'Failed to refresh token' });
-              }
+              if (err) return res.status(500).json({ error: 'Failed to refresh token' });
               res.json({ accessToken: newToken });
             }
           );

@@ -39,6 +39,7 @@ const Sidebar = ({ admin, onLogout }) => {
       <nav className="menu-content">
         <h6>USER MANAGEMENT</h6>
         <ul>
+<<<<<<< HEAD
           {/* Only show Manage Admins to actual admins */}
           {role === 'admin' && (
             <li>
@@ -48,6 +49,20 @@ const Sidebar = ({ admin, onLogout }) => {
               </NavLink>
             </li>
           )}
+=======
+          <li>
+            <NavLink to="/admin/property">
+              <RiAdminLine />
+              Properties
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/admin/manage-admins">
+              <RiAdminLine />
+              Manage Admins
+            </NavLink>
+          </li>
+>>>>>>> 0f8741c931f55df5952de0b87cde1a16f85fd10c
         </ul>
       </nav>
 
