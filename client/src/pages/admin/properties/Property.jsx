@@ -12,7 +12,6 @@ const GetProperties = () => {
   const [properties, setProperties] = useState([]);
   const navigate = useNavigate();
 
-  // fetch all properties
   const fetchProperties = async () => {
     try {
       const res = await axios.get("http://localhost:4500/getproperties");
@@ -27,7 +26,6 @@ const GetProperties = () => {
     fetchProperties();
   }, []);
 
-  // delete property
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this property?")) return;
     try {

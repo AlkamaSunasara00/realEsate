@@ -19,6 +19,8 @@ const AddProperty = () => {
     image: null,
   });
 
+  const [imgPreview, setImgPreview] = useState(null);
+
   // handle text inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,11 +29,13 @@ const AddProperty = () => {
 
   // handle file input
   const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    setForm((prev) => ({ ...prev, [name]: files[0] }));
+    const file = e.target.files[0];
+    if (file) {
+      setForm((prev) => ({ ...prev, image: file }));
+      setImgPreview(URL.createObjectURL(file));
+    }
   };
 
-  // submit property
   const handleSubmit = async () => {
     try {
       const fd = new FormData();
@@ -46,7 +50,7 @@ const AddProperty = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Property added successfully");
+      alert("Property added successfully ✅");
       navigate("/admin/property");
     } catch (err) {
       console.error("Add error:", err);
@@ -78,21 +82,28 @@ const AddProperty = () => {
           </div>
 
           <div className="admin-panel-header-add-buttons">
-            <NavLink to="/admin/property" className="cancel-btn dashboard-add-product-btn">
+            <NavLink
+              to="/admin/property"
+              className="cancel-btn dashboard-add-product-btn"
+            >
               <HiXMark /> Cancel
             </NavLink>
 
-            <button onClick={handleSubmit} className="primary-btn dashboard-add-product-btn">
+            <button
+              onClick={handleSubmit}
+              className="primary-btn dashboard-add-product-btn"
+            >
               <MdSave /> Save Property
             </button>
           </div>
         </div>
 
-        {/* ===== FORM CARD ===== */}
+        {/* ===== FORM SECTION ===== */}
         <div className="dashboard-add-content-card-div">
+          {/* ===== LEFT SIDE (Form fields) ===== */}
           <div className="dashboard-add-content-left-side">
             <div className="dashboard-add-content-card">
-              <h6>Property Information</h6>
+              <h6>Property Details</h6>
 
               <div className="add-product-form-container">
                 <div className="coupon-code-input-profile">
@@ -146,41 +157,48 @@ const AddProperty = () => {
 
                   <div>
                     <label>Status</label>
-                    <select name="status" value={form.status} onChange={handleChange}>
+                    <select
+                      name="status"
+                      value={form.status}
+                      onChange={handleChange}
+                    >
                       <option value="available">Available</option>
                       <option value="reserved">Reserved</option>
                       <option value="sold">Sold</option>
                     </select>
                   </div>
                 </div>
-
-                <div className="coupon-code-input-profile">
-                  <div>
-                    <label>Upload Image</label>
-                    <input type="file" name="image" onChange={handleFileChange} />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* right side card (optional for image preview or map) */}
+          {/* ===== RIGHT SIDE (Image upload & preview) ===== */}
           <div className="dashboard-add-content-right-side">
-            {form.image && (
-              <div className="dashboard-add-content-card">
-                <h6>Preview</h6>
-                <img
-                  src={URL.createObjectURL(form.image)}
-                  alt="Preview"
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    marginTop: "8px",
-                    objectFit: "cover",
-                  }}
+            <div className="dashboard-add-content-card">
+              <h6>Property Image</h6>
+
+              <div className="add-product-form-container">
+                {imgPreview && (
+                  <img
+                    src={imgPreview}
+                    alt="Preview"
+                    style={{
+                      width: "100%",
+                      borderRadius: "8px",
+                      marginBottom: "10px",
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
+
+                <input
+                  type="file"
+                  name="image"
+                  onChange={handleFileChange}
+                  style={{ marginTop: "6px" }}
                 />
               </div>
-            )}
+            </div>
           </div>
         </div>
       </main>
