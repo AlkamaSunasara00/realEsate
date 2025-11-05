@@ -1,0 +1,78 @@
+.dashboard-navbar {
+  font-family: var(--info-font);
+  background-color: var(--light-white-color);
+  width: calc(100% - 250px);
+  padding: 16px 20px;
+  position: fixed;
+  left: 250px;
+  top: 0;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+}
+.dashboard-navbar-seach-input {
+  position: relative;
+}
+.dashboard-navbar-seach-input svg {
+  position: absolute;
+  color: var(--light-gray-color);
+  font-size: 22px;
+  left: 96%;
+  top: 25%;
+}
+.dashboard-navbar-seach-input input {
+  width: 9in;
+  outline: none;
+  padding: 12px;
+  color: var(--light-gray-color);
+  font-size: 16px;
+  border-radius: 6px;
+  border: 2px solid var(--primary-border-color);
+}
+.dashboard-nav-notification-bell-profile {
+  display: flex;
+  align-items: center;
+}
+.dashboard-nav-notification-bell svg {
+  font-size: 24px;
+  cursor: pointer;
+  margin-top: 6px;
+  margin-right: 25px;
+  color: var(--light-gray-color);
+}
+.dashboard-nav-profile img {
+  height: 40px;
+  width: 40px;
+  margin-right: 6px;
+}
+.dashboard-nav-profile {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.dashboard-nav-profile-name span {
+  font-size: 14px;
+  font-weight: 500;
+}
+.dashboard-nav-profile-name p {
+  font-size: 12px;
+  padding-top: 3px;
+  color: var(--light-gray-color);
+  font-family: var(--info-font);
+  font-weight: 500;
+}
+.dashboard-nav-profile svg {
+  font-size: 20px;
+  margin-left: 6px;
+  color: var(--light-gray-color);
+}
+
+@media screen and (max-width: 1350px) {
+  .dashboard-navbar-seach-input input {
+    width: 7.7in;
+  }
+  .dashboard-navbar-seach-input svg {
+    left: 95.3%;
+  }
+}
