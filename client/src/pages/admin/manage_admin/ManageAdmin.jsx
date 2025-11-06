@@ -5,9 +5,10 @@ import Breadcrumb from "../layout/Breadcrumb";
 import { IoPencil } from "react-icons/io5";
 import { MdDeleteForever } from "react-icons/md";
 import api from "../../../api/axiosInstance";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useNavigationType } from "react-router-dom";
 
 import "../../../assets/css/admin-card.css"
+import { FaRegEye } from "react-icons/fa";
 
 const ManageAdmin = () => {
   const [activeTab, setActiveTab] = useState("All");
@@ -36,7 +37,7 @@ const ManageAdmin = () => {
       const width = window.innerWidth;
       setIsMobile(width < 768);
       setIsTablet(width >= 768 && width < 1024);
-      if (! (width < 768) && !(width >= 768 && width < 1024)) {
+      if (!(width < 768) && !(width >= 768 && width < 1024)) {
         setIsSidebarOpen(false);
       }
     };
@@ -63,7 +64,6 @@ const ManageAdmin = () => {
       alert("Failed to delete admin");
     }
   };
-
   const currentAdmin = { name: "Admin User", role: "admin" };
 
   return (
@@ -131,6 +131,7 @@ const ManageAdmin = () => {
                       </td>
                       {!isMobile && <td className="admin-added">{a.createdat?.slice(0, 10)}</td>}
                       <td className="actions admin-actions">
+                        <FaRegEye onClick={() => navigate(`/admin/view-admin/${a.id}`)} />
                         <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" title="Edit admin" />
                         <MdDeleteForever onClick={() => handleDelete(a.id)} className="delete-btn" title="Delete admin" />
                       </td>
@@ -204,7 +205,7 @@ const ManageAdmin = () => {
               <div className="detail-modal-body">
                 <div className="detail-row"><strong>Phone:</strong> {selectedAdmin.number || "—"}</div>
                 <div className="detail-row"><strong>Status:</strong> {selectedAdmin.status}</div>
-                <div className="detail-row"><strong>Added:</strong> {selectedAdmin.createdat?.slice(0,10) || "—"}</div>
+                <div className="detail-row"><strong>Added:</strong> {selectedAdmin.createdat?.slice(0, 10) || "—"}</div>
                 <div className="detail-row"><strong>About:</strong> <div style={{ marginTop: 6 }}>{selectedAdmin.about || "—"}</div></div>
               </div>
 
