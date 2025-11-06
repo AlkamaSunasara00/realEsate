@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// client/src/pages/admin/properties/AddProperty.jsx
+import React, { useEffect, useState } from "react";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import { MdSave } from "react-icons/md";
@@ -19,8 +20,13 @@ const AddProperty = () => {
     image: null,
   });
 
+  // preview state (was missing)
+  const [imgPreview, setImgPreview] = useState(null);
+
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+  const [isTablet, setIsTablet] = useState(
+    window.innerWidth <= 1024 && window.innerWidth > 768
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -40,12 +46,23 @@ const AddProperty = () => {
 
   // handle file input
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
+      // revoke previous preview URL to avoid memory leaks
+      if (imgPreview) URL.revokeObjectURL(imgPreview);
+
       setForm((prev) => ({ ...prev, image: file }));
-      setImgPreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setImgPreview(url);
     }
   };
+
+  // cleanup preview url when component unmounts
+  useEffect(() => {
+    return () => {
+      if (imgPreview) URL.revokeObjectURL(imgPreview);
+    };
+  }, [imgPreview]);
 
   const handleSubmit = async () => {
     try {
@@ -79,9 +96,16 @@ const AddProperty = () => {
     <>
       <Navbar />
 
-      <main className={`admin-panel-header-div ${isMobile ? 'mobile-view' : ''} ${isTablet ? 'tablet-view' : ''}`}>
+      <main
+        className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${
+          isTablet ? "tablet-view" : ""
+        }`}
+      >
         {/* ===== HEADER + BREADCRUMB ===== */}
-        <div className="admin-dashboard-main-header" style={{ marginBottom: "24px" }}>
+        <div
+          className="admin-dashboard-main-header"
+          style={{ marginBottom: "24px" }}
+        >
           <div>
             <h5>Add Property</h5>
             <div className="admin-panel-breadcrumb">
@@ -98,17 +122,11 @@ const AddProperty = () => {
           </div>
 
           <div className="admin-panel-header-add-buttons">
-            <NavLink
-              to="/admin/property"
-              className="cancel-btn dashboard-add-product-btn"
-            >
+            <NavLink to="/admin/property" className="cancel-btn dashboard-add-product-btn">
               <HiXMark /> Cancel
             </NavLink>
 
-            <button
-              onClick={handleSubmit}
-              className="primary-btn dashboard-add-product-btn"
-            >
+            <button onClick={handleSubmit} className="primary-btn dashboard-add-product-btn">
               <MdSave /> Save Property
             </button>
           </div>
@@ -124,7 +142,9 @@ const AddProperty = () => {
               <div className="add-product-form-container">
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label>Title <span style={{color: 'red'}}>*</span></label>
+                    <label>
+                      Title <span style={{ color: "red" }}>*</span>
+                    </label>
                     <input
                       type="text"
                       name="title"
@@ -136,7 +156,9 @@ const AddProperty = () => {
                   </div>
 
                   <div>
-                    <label>Price (₹) <span style={{color: 'red'}}>*</span></label>
+                    <label>
+                      Price (₹) <span style={{ color: "red" }}>*</span>
+                    </label>
                     <input
                       type="number"
                       name="price"
@@ -148,7 +170,9 @@ const AddProperty = () => {
                   </div>
 
                   <div>
-                    <label>Address <span style={{color: 'red'}}>*</span></label>
+                    <label>
+                      Address <span style={{ color: "red" }}>*</span>
+                    </label>
                     <input
                       type="text"
                       name="address"
@@ -161,7 +185,7 @@ const AddProperty = () => {
                 </div>
 
                 <div className="coupon-code-input-profile">
-                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+                  <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
                     <label>Description</label>
                     <textarea
                       name="description"
@@ -174,11 +198,7 @@ const AddProperty = () => {
 
                   <div>
                     <label>Status</label>
-                    <select
-                      name="status"
-                      value={form.status}
-                      onChange={handleChange}
-                    >
+                    <select name="status" value={form.status} onChange={handleChange}>
                       <option value="available">Available</option>
                       <option value="reserved">Reserved</option>
                       <option value="sold">Sold</option>
@@ -189,12 +209,7 @@ const AddProperty = () => {
                 <div className="coupon-code-input-profile">
                   <div>
                     <label>Upload Image</label>
-                    <input 
-                      type="file" 
-                      name="image" 
-                      onChange={handleFileChange}
-                      accept="image/*"
-                    />
+                    <input type="file" name="image" onChange={handleFileChange} accept="image/*" />
                   </div>
                 </div>
               </div>
@@ -203,24 +218,29 @@ const AddProperty = () => {
 
           {/* right side card for image preview */}
           <div className="dashboard-add-content-right-side">
-            {form.image && (
+            {imgPreview ? (
               <div className="dashboard-add-content-card">
                 <h6>Image Preview</h6>
                 <div className="add-product-form-container">
                   <img
-                    src={URL.createObjectURL(form.image)}
+                    src={imgPreview}
                     alt="Preview"
                     style={{
                       width: "100%",
                       borderRadius: "8px",
                       marginTop: "8px",
                       objectFit: "cover",
-                      maxHeight: "300px"
+                      maxHeight: "300px",
                     }}
                   />
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="dashboard-add-content-card">
+                <h6>No Image</h6>
+                <div style={{ padding: 12, color: "#6b7280" }}>No image uploaded yet</div>
+              </div>
+            )}
           </div>
         </div>
       </main>

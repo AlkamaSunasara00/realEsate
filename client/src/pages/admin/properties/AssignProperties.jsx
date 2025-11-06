@@ -68,7 +68,6 @@ export default function GetAssignments() {
 
   return (
     <>
-      <Sidebar />
       <Navbar />
 
       <main className="admin-panel-header-div">

@@ -23,7 +23,7 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
       const timer = setTimeout(() => {
         toggleSidebar();
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,17 +55,17 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
   // Build sidebar classes dynamically
   const getSidebarClasses = () => {
     let classes = 'admin-dashboard-sidebar';
-    
+
     if (isMobile) {
       classes += ' mobile-sidebar';
     } else if (isTablet) {
       classes += ' tablet-sidebar';
     }
-    
+
     if ((isMobile || isTablet) && isSidebarOpen) {
       classes += ' sidebar-open';
     }
-    
+
     return classes;
   };
 
@@ -80,8 +80,8 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
     <>
       {/* Mobile/Tablet Overlay */}
       {(isMobile || isTablet) && isSidebarOpen && (
-        <div 
-          className="sidebar-overlay" 
+        <div
+          className="sidebar-overlay"
           onClick={toggleSidebar}
           role="button"
           tabIndex={0}
@@ -89,9 +89,9 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
           onKeyDown={(e) => e.key === 'Enter' && toggleSidebar()}
         />
       )}
-      
+
       {/* Sidebar */}
-      <aside 
+      <aside
         className={getSidebarClasses()}
         aria-label="Main navigation sidebar"
       >
@@ -101,8 +101,8 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
             <div className="admin-sidebar-logo">
               <h4>XCART</h4>
             </div>
-            <button 
-              className="sidebar-close-btn" 
+            <button
+              className="sidebar-close-btn"
               onClick={toggleSidebar}
               aria-label="Close sidebar"
             >
@@ -110,7 +110,7 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
             </button>
           </div>
         )}
-        
+
         {/* Desktop Logo */}
         {!isMobile && !isTablet && (
           <div className="admin-sidebar-logo">
@@ -122,8 +122,8 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
           <h6>MENU</h6>
           <ul>
             <li>
-              <NavLink 
-                to="/admin/dashboard" 
+              <NavLink
+                to="/admin/dashboard"
                 onClick={handleNavClick}
                 className={({ isActive }) => isActive ? 'active' : ''}
               >
@@ -139,8 +139,8 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
           <ul>
             {role === 'admin' && (
               <li>
-                <NavLink 
-                  to="/admin/manage-admins" 
+                <NavLink
+                  to="/admin/manage-admins"
                   onClick={handleNavClick}
                   className={({ isActive }) => isActive ? 'active' : ''}
                 >
@@ -149,42 +149,29 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
                 </NavLink>
               </li>
             )}
-            <li>
-              <NavLink 
-                to="/admin/property" 
-                onClick={handleNavClick}
-                className={({ isActive }) => isActive ? 'active' : ''}
-              >
-                <RiAdminLine />
-                <span>Properties</span>
-              </NavLink>
-            </li>
+                   <li>
+          <NavLink to="/admin/property">
+            <RiAdminLine />
+            Properties
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/admin/propertyassigned">
+            <RiAdminLine />
+            Propertyasigned
+          </NavLink>
+        </li>
           </ul>
-        </nav>
-          )}
-          <li>
-            <NavLink to="/admin/property">
-              <RiAdminLine />
-              Properties
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/admin/propertyassigned">
-              <RiAdminLine />
-              Propertyasigned
-            </NavLink>
-          </li>
-        </ul>
       </nav>
 
-        <div className="menu-content">
-          <h6>OTHERS</h6>
-          <button onClick={handleLogout} className="sidebar-logout-btn">
-            <FiLogOut />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      <div className="menu-content">
+        <h6>OTHERS</h6>
+        <button onClick={handleLogout} className="sidebar-logout-btn">
+          <FiLogOut />
+          <span>Logout</span>
+        </button>
+      </div>
+      </aside >
     </>
   );
 };

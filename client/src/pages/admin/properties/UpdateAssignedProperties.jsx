@@ -126,7 +126,6 @@ export default function UpdateAssignment() {
 
   return (
     <>
-      <Sidebar />
       <Navbar />
 
       <main className="admin-panel-header-div">
