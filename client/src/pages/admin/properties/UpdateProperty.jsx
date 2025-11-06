@@ -22,11 +22,25 @@ const UpdateProperty = () => {
   });
 
   const [imgPreview, setImgPreview] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth <= 1024 && window.innerWidth > 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (location.state?.item) {
       setForm(location.state.item);
-      setImgPreview(`/uploads/${location.state.item.image}`);
+      if (location.state.item.image) {
+        setImgPreview(`http://localhost:4500/uploads/${location.state.item.image}`);
+      }
     }
   }, [location.state]);
 
@@ -47,6 +61,12 @@ const UpdateProperty = () => {
     if (!form.id) return alert("No property selected to update");
 
     try {
+      // Basic validation
+      if (!form.title || !form.price || !form.address) {
+        alert("Please fill in all required fields");
+        return;
+      }
+
       const fd = new FormData();
       fd.append("title", form.title);
       fd.append("description", form.description);
@@ -59,29 +79,40 @@ const UpdateProperty = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Property updated successfully ");
+      alert("Property updated successfully ✅");
       navigate("/admin/property");
     } catch (err) {
       console.error("Update error:", err);
-      alert("Failed to update property ");
+      alert("Failed to update property ❌");
     }
   };
 
   if (!form || !form.id) {
     return (
-      <div style={{ padding: 20 }}>
-        <h3>No property selected to update</h3>
-        <button onClick={() => navigate("/admin/property")}>Go Back</button>
-      </div>
+      <>
+        <Sidebar />
+        <Navbar />
+        <main className="admin-panel-header-div">
+          <div style={{ padding: 20, textAlign: 'center' }}>
+            <h3>No property selected to update</h3>
+            <button 
+              onClick={() => navigate("/admin/property")}
+              className="primary-btn"
+              style={{ marginTop: '20px' }}
+            >
+              Go Back to Property List
+            </button>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
     <>
-      <Sidebar />
       <Navbar />
 
-      <main className="admin-panel-header-div">
+      <main className={`admin-panel-header-div ${isMobile ? 'mobile-view' : ''} ${isTablet ? 'tablet-view' : ''}`}>
         {/* ===== HEADER ===== */}
         <div className="admin-dashboard-main-header" style={{ marginBottom: "24px" }}>
           <div>
@@ -125,64 +156,78 @@ const UpdateProperty = () => {
               <div className="add-product-form-container">
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label>Title</label>
+                    <label>Title <span style={{color: 'red'}}>*</span></label>
                     <input
                       name="title"
                       type="text"
-                      value={form.title}
+                      value={form.title || ""}
                       onChange={handleChange}
                       placeholder="Property title..."
+                      required
                     />
                   </div>
 
                   <div>
-                    <label>Price (₹)</label>
+                    <label>Price (₹) <span style={{color: 'red'}}>*</span></label>
                     <input
                       name="price"
                       type="number"
-                      value={form.price}
+                      value={form.price || ""}
                       onChange={handleChange}
                       placeholder="Property price..."
+                      required
                     />
                   </div>
-                </div>
 
-                <div className="coupon-code-input-profile">
-                  <div style={{ flex: 1 }}>
-                    <label>Description</label>
-                    <textarea
-                      name="description"
-                      rows={3}
-                      value={form.description}
-                      onChange={handleChange}
-                      placeholder="Describe the property..."
-                    ></textarea>
-                  </div>
-                </div>
-
-                <div className="coupon-code-input-profile">
                   <div>
-                    <label>Address</label>
+                    <label>Address <span style={{color: 'red'}}>*</span></label>
                     <input
                       name="address"
                       type="text"
-                      value={form.address}
+                      value={form.address || ""}
                       onChange={handleChange}
                       placeholder="Full address..."
+                      required
                     />
+                  </div>
+                </div>
+
+                <div className="coupon-code-input-profile">
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+                    <label>Description</label>
+                    <textarea
+                      name="description"
+                      rows={4}
+                      value={form.description || ""}
+                      onChange={handleChange}
+                      placeholder="Describe the property..."
+                    ></textarea>
                   </div>
 
                   <div>
                     <label>Status</label>
                     <select
                       name="status"
-                      value={form.status}
+                      value={form.status || "available"}
                       onChange={handleChange}
                     >
                       <option value="available">Available</option>
                       <option value="reserved">Reserved</option>
                       <option value="sold">Sold</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="coupon-code-input-profile">
+                  <div>
+                    <label>Change Image (Optional)</label>
+                    <input
+                      type="file"
+                      name="image"
+                      id="propertyImg"
+                      onChange={handleFileChange}
+                      accept="image/*"
+                    />
                   </div>
                 </div>
               </div>
@@ -195,24 +240,36 @@ const UpdateProperty = () => {
               <h6>Property Image</h6>
 
               <div className="add-product-form-container">
-                {imgPreview && (
+                {imgPreview ? (
                   <img
                     src={imgPreview}
-                    alt="Preview"
+                    alt="Property Preview"
                     style={{
                       width: "100%",
                       borderRadius: "8px",
                       marginBottom: "10px",
                       objectFit: "cover",
+                      maxHeight: "300px"
                     }}
                   />
+                ) : (
+                  <div style={{
+                    width: "100%",
+                    height: "200px",
+                    borderRadius: "8px",
+                    backgroundColor: "#f5f5f7",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#8b8e99",
+                    marginBottom: "10px"
+                  }}>
+                    No image uploaded
+                  </div>
                 )}
-                <input
-                  type="file"
-                  name="image"
-                  id="propertyImg"
-                  onChange={handleFileChange}
-                />
+                <p style={{ fontSize: "13px", color: "#8b8e99", marginTop: "8px" }}>
+                  Upload a new image to replace the current one
+                </p>
               </div>
             </div>
           </div>

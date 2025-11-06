@@ -462,6 +462,630 @@ button {
 }
 
 /* ----delete-modal-container---- */
-.manage-client-data{
+
+
+
+/* Enhanced responsive improvements */
+@media screen and (max-width: 1024px) {
+  .admin-panel-header-div.tablet-view {
+    width: 100%;
+    left: 0;
+    padding: 8px 18px 20px 18px;
+    top: 67px;
+    height: calc(100vh - 67px);
+  }
+  
+  .admin-panel-header-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  .admin-panel-header-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .admin-panel-header-tab {
+    padding: 10px 18px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+
+/* ========================================
+   RESPONSIVE ADMIN PANEL
+   ======================================== */
+
+/* DESKTOP - Sidebar always visible */
+.admin-panel-header-div {
+  font-family: var(--info-font);
+  background-color: var(--light-white-color);
+  width: calc(100% - 250px);
+  padding: 8px 20px 20px 20px;
+  position: fixed;
+  height: calc(100vh - 77px);
+  left: 250px;
+  top: 77px;
+  overflow-y: auto;
+}
+
+/* TABLET - Full width, no sidebar offset */
+@media screen and (max-width: 1024px) {
+  .admin-panel-header-div.tablet-view {
+    width: 100% !important;
+    left: 0 !important;
+    padding: 8px 18px 20px 18px;
+    top: 67px;
+    height: calc(100vh - 67px);
+  }
+  
+  .admin-panel-header-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  .admin-panel-header-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .admin-panel-header-tab {
+    padding: 10px 18px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+
+/* MOBILE - Full width, no sidebar offset */
+@media screen and (max-width: 768px) {
+  .admin-panel-header-div.mobile-view {
+    width: 100% !important;
+    left: 0 !important;
+    padding: 8px 12px 16px 12px;
+    height: calc(100vh - 60px);
+    top: 60px;
+  }
+  
+  .admin-panel-header-div.mobile-view h5 {
+    font-size: 20px;
+  }
+  
+  .admin-panel-breadcrumb {
+    font-size: 12px;
+  }
+  
+  .admin-panel-header-div.mobile-view .admin-dashboard-main-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .admin-panel-header-div.mobile-view .admin-panel-header-add-buttons {
+    width: 100%;
+  }
+  
+  .admin-panel-header-div.mobile-view .dashboard-add-product-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .admin-panel-header-div.mobile-view .admin-panel-header-tabs {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .admin-panel-header-div.mobile-view .admin-panel-header-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+  
+  /* Mobile table improvements */
+  .dashboard-table-container.mobile-table {
+    font-size: 12px;
+    margin-top: 16px;
+  }
+  
+  .dashboard-table-container.mobile-table th {
+    font-size: 13px;
+    padding: 12px 8px;
+  }
+  
+  .dashboard-table-container.mobile-table td {
+    padding: 14px 8px;
+  }
+  
+  .dashboard-table-container.mobile-table .admin-profile img {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .admin-info-mobile p {
+    font-size: 11px;
+    color: var(--light-gray-color);
+    margin-top: 4px;
+  }
+  
+  .dashboard-table-container.mobile-table .status {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  
+  .dashboard-table-container.mobile-table .actions svg {
+    font-size: 20px;
+    margin-right: 8px;
+  }
+}
+
+/* Tablet table improvements */
+.dashboard-table-container.tablet-table {
+  font-size: 13px;
+}
+
+.dashboard-table-container.tablet-table th {
+  font-size: 14px;
+  padding: 14px 12px;
+}
+
+.dashboard-table-container.tablet-table td {
+  padding: 16px 12px;
+}
+
+@media screen and (max-width: 480px) {
+  .admin-panel-header-div {
+    padding: 8px 10px 16px 10px;
+  }
+  
+  .dashboard-table-container.mobile-table {
+    font-size: 11px;
+  }
+  
+  .dashboard-table-container.mobile-table th,
+  .dashboard-table-container.mobile-table td {
+    padding: 10px 6px;
+  }
+  
+  .admin-panel-header-tab {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+  }
+}
+
+
+
+/* ========================================
+   RESPONSIVE ADMIN PANEL - FIXED
+   ======================================== */
+
+/* DESKTOP - Sidebar always visible */
+.admin-panel-header-div {
+  font-family: var(--info-font);
+  background-color: var(--light-white-color);
+  width: calc(100% - 250px);
+  padding: 8px 20px 20px 20px;
+  position: fixed;
+  height: calc(100vh - 77px);
+  left: 250px;
+  top: 77px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+/* TABLET - Full width when sidebar is hidden */
+@media screen and (max-width: 1024px) {
+  .admin-panel-header-div.tablet-view {
+    width: 100% !important;
+    left: 0 !important;
+    padding: 8px 18px 20px 18px;
+    top: 67px;
+    height: calc(100vh - 67px);
+  }
+  
+  /* Reset to desktop width when sidebar is open */
+  .admin-panel-header-div.tablet-view.sidebar-open {
+    width: calc(100% - 280px) !important;
+    left: 280px !important;
+  }
+}
+
+/* MOBILE - Full width when sidebar is hidden */
+@media screen and (max-width: 768px) {
+  .admin-panel-header-div.mobile-view {
+    width: 100% !important;
+    left: 0 !important;
+    padding: 8px 12px 16px 12px;
+    height: calc(100vh - 60px);
+    top: 60px;
+  }
+  
+  /* Reset to desktop width when sidebar is open */
+  .admin-panel-header-div.mobile-view.sidebar-open {
+    width: calc(100% - 280px) !important;
+    left: 280px !important;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   RESPONSIVE FORM LAYOUTS - FIXED
+   ======================================== */
+
+/* Dashboard Add Content Responsive */
+.dashboard-add-content-card-div {
   display: flex;
+  gap: 25px;
+}
+
+.dashboard-add-content-left-side {
+  flex: 1;
+  min-width: 0; /* Prevent flex item overflow */
+}
+
+.dashboard-add-content-right-side {
+  width: 350px;
+  flex-shrink: 0;
+}
+
+/* Form Input Grid Responsive */
+.coupon-code-input-max-min-price,
+.coupon-code-start-expity-date,
+.coupon-code-input-profile {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 10px;
+  gap: 20px;
+}
+
+/* Form Input Styling */
+.add-product-form-container input,
+.add-product-form-container select,
+.add-product-form-container textarea {
+  width: 100%;
+  font-size: 15px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid var(--primary-border-color);
+  font-family: var(--info-font);
+  color: var(--black-color);
+}
+
+.add-product-form-container input:focus,
+.add-product-form-container select:focus,
+.add-product-form-container textarea:focus {
+  outline: none;
+  border-color: var(--primary-btn-bg);
+}
+
+.add-product-form-container label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--black-color);
+  font-family: var(--info-font);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.add-product-form-container input::placeholder {
+  color: var(--placeholder-color);
+}
+
+/* Profile Image Styling */
+.profile-image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-image-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+  border: 3px solid var(--primary-border-color);
+}
+
+/* ========================================
+   TABLET RESPONSIVE (1024px and below)
+   ======================================== */
+
+@media screen and (max-width: 1024px) {
+  /* Two-column layout for tablets */
+  .coupon-code-input-max-min-price,
+  .coupon-code-start-expity-date,
+  .coupon-code-input-profile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* Stack sidebar below main content - FULL WIDTH */
+  .dashboard-add-content-card-div {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .dashboard-add-content-left-side,
+  .dashboard-add-content-right-side {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  /* Adjust card padding */
+  .dashboard-add-content-card {
+    padding: 20px;
+    width: 100%;
+  }
+
+  /* Header buttons responsive - SIDE BY SIDE */
+  .admin-panel-header-add-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    width: auto;
+  }
+
+  .admin-dashboard-main-header .dashboard-add-product-btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    flex: 0 1 auto;
+    min-width: 120px;
+  }
+
+  .profile-image-preview {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* ========================================
+   MOBILE RESPONSIVE (768px and below)
+   ======================================== */
+
+@media screen and (max-width: 768px) {
+  /* Single column layout for mobile */
+  .coupon-code-input-max-min-price,
+  .coupon-code-start-expity-date,
+  .coupon-code-input-profile {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Full width content areas */
+  .dashboard-add-content-card-div {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dashboard-add-content-left-side,
+  .dashboard-add-content-right-side {
+    width: 100% !important;
+    max-width: 100%;
+    flex: none;
+  }
+
+  /* Full width header - STACKED LAYOUT */
+  .admin-dashboard-main-header {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px !important;
+  }
+
+  /* Full width buttons container - SIDE BY SIDE */
+  .admin-panel-header-add-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .admin-dashboard-main-header .dashboard-add-product-btn {
+    flex: 1 1 50%;
+    justify-content: center;
+    padding: 12px 10px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  /* Card adjustments */
+  .dashboard-add-content-card {
+    padding: 16px;
+    border-radius: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .dashboard-add-content-card h6 {
+    font-size: 16px;
+  }
+
+  /* Form input adjustments */
+  .add-product-form-container {
+    width: 100%;
+  }
+
+  .add-product-form-container input,
+  .add-product-form-container select,
+  .add-product-form-container textarea {
+    font-size: 14px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .add-product-form-container label {
+    font-size: 13px;
+  }
+
+  /* Breadcrumb responsive */
+  .admin-panel-breadcrumb {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .admin-panel-header-div h5 {
+    font-size: 20px;
+  }
+
+  /* Profile image mobile */
+  .profile-image-preview {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE (480px and below)
+   ======================================== */
+
+@media screen and (max-width: 480px) {
+  .admin-panel-header-div {
+    padding: 8px 12px 16px 12px;
+  }
+
+  .dashboard-add-content-card-div {
+    gap: 14px;
+  }
+
+  .dashboard-add-content-card {
+    padding: 14px;
+  }
+
+  .dashboard-add-content-card h6 {
+    font-size: 15px;
+  }
+
+  .add-product-form-container input,
+  .add-product-form-container select,
+  .add-product-form-container textarea {
+    font-size: 13px;
+    padding: 9px;
+  }
+
+  /* Buttons stay side by side but more compact */
+  .admin-dashboard-main-header .dashboard-add-product-btn {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .admin-dashboard-main-header .dashboard-add-product-btn svg {
+    font-size: 16px;
+    margin-right: 4px;
+  }
+
+  .profile-image-preview {
+    width: 80px;
+    height: 80px;
+  }
+
+  /* Reduce button gap on very small screens */
+  .admin-panel-header-add-buttons {
+    gap: 8px;
+  }
+}
+
+/* ========================================
+   EXTRA SMALL MOBILE (380px and below)
+   ======================================== */
+
+@media screen and (max-width: 380px) {
+  /* Stack buttons vertically only on very small screens */
+  .admin-panel-header-add-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .admin-dashboard-main-header .dashboard-add-product-btn {
+    width: 100%;
+    padding: 12px 10px;
+  }
+}
+
+
+
+
+/* Textarea specific styling */
+.add-product-form-container textarea {
+  width: 100%;
+  font-size: 15px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid var(--primary-border-color);
+  font-family: var(--info-font);
+  color: var(--black-color);
+  resize: vertical; /* Allow vertical resize only */
+  min-height: 80px;
+  box-sizing: border-box;
+}
+
+.add-product-form-container textarea:focus {
+  outline: none;
+  border-color: var(--primary-btn-bg);
+}
+
+.add-product-form-container textarea::placeholder {
+  color: var(--placeholder-color);
+}
+
+/* File input styling */
+.add-product-form-container input[type="file"] {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-product-form-container input[type="file"]::file-selector-button {
+  padding: 8px 16px;
+  margin-right: 12px;
+  border-radius: 6px;
+  border: 2px solid var(--primary-btn-bg);
+  background-color: var(--primary-btn-bg);
+  color: var(--white-color);
+  cursor: pointer;
+  font-family: var(--info-font);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.add-product-form-container input[type="file"]::file-selector-button:hover {
+  background-color: transparent;
+  color: var(--primary-btn-bg);
+}
+
+/* Mobile specific textarea adjustments */
+@media screen and (max-width: 768px) {
+  .add-product-form-container textarea {
+    font-size: 14px;
+    padding: 10px;
+    min-height: 70px;
+  }
+
+  .add-product-form-container input[type="file"] {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .add-product-form-container input[type="file"]::file-selector-button {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-right: 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .add-product-form-container textarea {
+    font-size: 13px;
+    padding: 9px;
+  }
 }

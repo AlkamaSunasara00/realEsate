@@ -19,12 +19,28 @@ const EditAdmin = () => {
   });
 
   const [imgPreview, setImgPreview] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth <= 1024 && window.innerWidth > 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
-      const res = await api.get(`/getUserById/${id}`);
-      setForm(res.data);
-      console.log(res.data)
+      try {
+        const res = await api.get(`/getagencybyid/${id}`);
+        setForm(res.data);
+        console.log(res.data);
+      } catch (err) {
+        console.error("Error loading admin data:", err);
+      }
     };
     load();
   }, [id]);
@@ -34,26 +50,30 @@ const EditAdmin = () => {
   };
 
   const handleImg = (e) => {
-    setImgPreview(URL.createObjectURL(e.target.files[0]));
+    if (e.target.files[0]) {
+      setImgPreview(URL.createObjectURL(e.target.files[0]));
+    }
   };
 
   const handleSubmit = async () => {
-    const fd = new FormData();
-    Object.keys(form).forEach((key) => fd.append(key, form[key]));
-    if (document.getElementById("profileImg").files[0]) {
-      fd.append("img", document.getElementById("profileImg").files[0]);
-    }
+    try {
+      const fd = new FormData();
+      Object.keys(form).forEach((key) => fd.append(key, form[key]));
+      if (document.getElementById("profileImg").files[0]) {
+        fd.append("img", document.getElementById("profileImg").files[0]);
+      }
 
-    await api.put(`/update-client/${id}`, fd);
-    navigate("/admin/manage-admins");
+      await api.put(`/update-client/${id}`, fd);
+      navigate("/admin/manage-admins");
+    } catch (err) {
+      alert(err?.response?.data?.error || "Failed to update admin");
+    }
   };
 
   return (
     <>
-      <Sidebar />
-      <Navbar />
 
-      <main className="admin-panel-header-div">
+      <main className={`admin-panel-header-div ${isMobile ? 'mobile-view' : ''} ${isTablet ? 'tablet-view' : ''}`}>
 
         <div className="admin-dashboard-main-header" style={{ marginBottom: "24px" }}>
           <div>
@@ -88,39 +108,66 @@ const EditAdmin = () => {
                 <div className="coupon-code-input-profile">
                   <div>
                     <label>Name</label>
-                    <input name="name" type="text" value={form.name} onChange={handleChange} />
+                    <input 
+                      name="name" 
+                      type="text" 
+                      value={form.name || ""} 
+                      onChange={handleChange}
+                      placeholder="Enter name"
+                    />
                   </div>
 
                   <div>
                     <label>Email</label>
-                    <input name="email" type="text" value={form.email} onChange={handleChange} />
+                    <input 
+                      name="email" 
+                      type="email" 
+                      value={form.email || ""} 
+                      onChange={handleChange}
+                      placeholder="Enter email"
+                    />
                   </div>
 
                   <div>
                     <label>Phone Number</label>
-                    <input name="number" type="text" value={form.number} onChange={handleChange} />
+                    <input 
+                      name="number" 
+                      type="text" 
+                      value={form.number || ""} 
+                      onChange={handleChange}
+                      placeholder="Enter phone number"
+                    />
                   </div>
                 </div>
 
                 <div className="coupon-code-input-profile">
                   <div>
                     <label>Alt Phone Number</label>
-                    <input name="alt_number" type="text" value={form.alt_number || ""} onChange={handleChange} />
+                    <input 
+                      name="alt_number" 
+                      type="text" 
+                      value={form.alt_number || ""} 
+                      onChange={handleChange}
+                      placeholder="Enter alternate number"
+                    />
                   </div>
 
                   <div>
                     <label>Status</label>
-                    <select name="status" value={form.status} onChange={handleChange}>
+                    <select name="status" value={form.status || "active"} onChange={handleChange}>
                       <option value="active">Active</option>
                       <option value="block">Blocked</option>
                     </select>
                   </div>
-                </div>
 
-                <div className="coupon-code-input-profile">
                   <div>
                     <label>Change Password (Optional)</label>
-                    <input name="password" type="password" placeholder="New Password (leave blank if same)" onChange={handleChange} />
+                    <input 
+                      name="password" 
+                      type="password" 
+                      placeholder="Leave blank to keep current" 
+                      onChange={handleChange} 
+                    />
                   </div>
                 </div>
 
@@ -130,15 +177,24 @@ const EditAdmin = () => {
 
           <div className="dashboard-add-content-right-side">
             <div className="dashboard-add-content-card">
-              <h6>Profile</h6>
+              <h6>Profile Image</h6>
               <div className="add-product-form-container">
-                <img
-                  src={imgPreview || `/uploads/${form.img}` || "/uploads/default.png"}
-                  alt="profile"
-                  style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "cover", marginBottom: "10px" }}
-                />
+                <div className="profile-image-container">
+                  <img
+                    src={imgPreview || (form.img ? `/uploads/${form.img}` : "/uploads/default.png")}
+                    alt="profile"
+                    className="profile-image-preview"
+                  />
 
-                <input type="file" id="profileImg" name="img" onChange={handleImg} />
+                  <label htmlFor="profileImg" style={{ marginBottom: "8px" }}>Upload New Image</label>
+                  <input 
+                    type="file" 
+                    id="profileImg" 
+                    name="img" 
+                    onChange={handleImg}
+                    accept="image/*"
+                  />
+                </div>
               </div>
             </div>
           </div>

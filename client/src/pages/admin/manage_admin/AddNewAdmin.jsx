@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import { MdSave } from "react-icons/md";
@@ -17,13 +17,32 @@ const AddNewAdmin = () => {
     status: "active",
   });
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth <= 1024 && window.innerWidth > 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
     try {
-      await api.post("/add-client", form); // role = client backend pe auto set hai
+      // Basic validation
+      if (!form.name || !form.email || !form.number || !form.password) {
+        alert("Please fill in all required fields");
+        return;
+      }
+
+      await api.post("/add-client", form);
       navigate("/admin/manage-admins");
     } catch (err) {
       alert(err?.response?.data?.error || "Something went wrong");
@@ -32,13 +51,12 @@ const AddNewAdmin = () => {
 
   return (
     <>
-      <Sidebar />
       <Navbar />
 
-      <main className="admin-panel-header-div">
+      <main className={`admin-panel-header-div ${isMobile ? 'mobile-view' : ''} ${isTablet ? 'tablet-view' : ''}`}>
         <div className="admin-dashboard-main-header" style={{ marginBottom: "24px" }}>
           <div>
-            <h5>Add Admin</h5>
+            <h5>Add New Admin</h5>
             <div className="admin-panel-breadcrumb">
               <Link to="/admin/dashboard" className="breadcrumb-link active">Dashboard</Link>
               <IoMdArrowDropright />
@@ -67,30 +85,58 @@ const AddNewAdmin = () => {
               <div className="add-product-form-container">
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label>Name</label>
-                    <input name="name" type="text" placeholder="Full Name..." onChange={handleChange} />
+                    <label>Name <span style={{color: 'red'}}>*</span></label>
+                    <input 
+                      name="name" 
+                      type="text" 
+                      placeholder="Enter full name" 
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
 
                   <div>
-                    <label>Email</label>
-                    <input name="email" type="text" placeholder="Email..." onChange={handleChange} />
+                    <label>Email <span style={{color: 'red'}}>*</span></label>
+                    <input 
+                      name="email" 
+                      type="email" 
+                      placeholder="Enter email address" 
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
 
                   <div>
-                    <label>Phone Number</label>
-                    <input name="number" type="text" placeholder="Phone Number..." onChange={handleChange} />
+                    <label>Phone Number <span style={{color: 'red'}}>*</span></label>
+                    <input 
+                      name="number" 
+                      type="tel" 
+                      placeholder="Enter phone number" 
+                      value={form.number}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
 
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label>Password</label>
-                    <input name="password" type="password" placeholder="Set Login Password..." onChange={handleChange} />
+                    <label>Password <span style={{color: 'red'}}>*</span></label>
+                    <input 
+                      name="password" 
+                      type="password" 
+                      placeholder="Set login password" 
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
 
                   <div>
                     <label>Status</label>
-                    <select name="status" onChange={handleChange}>
+                    <select name="status" value={form.status} onChange={handleChange}>
                       <option value="active">Active</option>
                       <option value="block">Blocked</option>
                     </select>
@@ -102,7 +148,7 @@ const AddNewAdmin = () => {
           </div>
 
           <div className="dashboard-add-content-right-side">
-            
+            {/* Empty for now - can add profile image upload later */}
           </div>
 
         </div>

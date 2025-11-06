@@ -11,6 +11,37 @@ const AdminLayout = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Sidebar state management
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth > 768 && window.innerWidth <= 1024);
+
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+  // Handle responsive screen size detection
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width <= 768);
+      setIsTablet(width > 768 && width <= 1024);
+      
+      // Auto-close sidebar when resizing to desktop
+      if (width > 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Initial check
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleLogout = async () => {
     try {
       // Call server logout (verifyToken middleware will validate token)
@@ -115,9 +146,21 @@ const AdminLayout = () => {
 
   return (
     <div className="Dashboard-container">
-      <Sidebar admin={admin} onLogout={handleLogout} />
+      <Sidebar 
+        admin={admin} 
+        onLogout={handleLogout}
+        isMobile={isMobile}
+        isTablet={isTablet}
+        isSidebarOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+      />
       <div>
-        <Navbar admin={admin} onLogout={handleLogout} />
+        <Navbar 
+          admin={admin} 
+          toggleSidebar={toggleSidebar}
+          isMobile={isMobile}
+          isTablet={isTablet}
+        />
         <main className="admin-panel-header-div">
           <Outlet context={{ admin }} />
         </main>

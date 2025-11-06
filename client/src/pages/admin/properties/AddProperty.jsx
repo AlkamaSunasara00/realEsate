@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import { MdSave } from "react-icons/md";
@@ -19,7 +19,18 @@ const AddProperty = () => {
     image: null,
   });
 
-  const [imgPreview, setImgPreview] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth <= 1024 && window.innerWidth > 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // handle text inputs
   const handleChange = (e) => {
@@ -38,6 +49,12 @@ const AddProperty = () => {
 
   const handleSubmit = async () => {
     try {
+      // Basic validation
+      if (!form.title || !form.price || !form.address) {
+        alert("Please fill in all required fields");
+        return;
+      }
+
       const fd = new FormData();
       fd.append("title", form.title);
       fd.append("description", form.description);
@@ -60,10 +77,9 @@ const AddProperty = () => {
 
   return (
     <>
-      <Sidebar />
       <Navbar />
 
-      <main className="admin-panel-header-div">
+      <main className={`admin-panel-header-div ${isMobile ? 'mobile-view' : ''} ${isTablet ? 'tablet-view' : ''}`}>
         {/* ===== HEADER + BREADCRUMB ===== */}
         <div className="admin-dashboard-main-header" style={{ marginBottom: "24px" }}>
           <div>
@@ -108,51 +124,52 @@ const AddProperty = () => {
               <div className="add-product-form-container">
                 <div className="coupon-code-input-profile">
                   <div>
-                    <label>Title</label>
+                    <label>Title <span style={{color: 'red'}}>*</span></label>
                     <input
                       type="text"
                       name="title"
-                      placeholder="Property title..."
+                      placeholder="Enter property title"
                       value={form.title}
                       onChange={handleChange}
+                      required
                     />
                   </div>
 
                   <div>
-                    <label>Price (₹)</label>
+                    <label>Price (₹) <span style={{color: 'red'}}>*</span></label>
                     <input
                       type="number"
                       name="price"
-                      placeholder="Enter price..."
+                      placeholder="Enter price"
                       value={form.price}
                       onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label>Address <span style={{color: 'red'}}>*</span></label>
+                    <input
+                      type="text"
+                      name="address"
+                      placeholder="Enter full address"
+                      value={form.address}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
                 </div>
 
                 <div className="coupon-code-input-profile">
-                  <div style={{ flex: 1 }}>
+                  <div style={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
                     <label>Description</label>
                     <textarea
                       name="description"
                       placeholder="Write about this property..."
-                      rows={3}
+                      rows={4}
                       value={form.description}
                       onChange={handleChange}
                     ></textarea>
-                  </div>
-                </div>
-
-                <div className="coupon-code-input-profile">
-                  <div>
-                    <label>Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      placeholder="Full address..."
-                      value={form.address}
-                      onChange={handleChange}
-                    />
                   </div>
 
                   <div>
@@ -168,35 +185,40 @@ const AddProperty = () => {
                     </select>
                   </div>
                 </div>
+
+                <div className="coupon-code-input-profile">
+                  <div>
+                    <label>Upload Image</label>
+                    <input 
+                      type="file" 
+                      name="image" 
+                      onChange={handleFileChange}
+                      accept="image/*"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* ===== RIGHT SIDE (Image upload & preview) ===== */}
+          {/* right side card for image preview */}
           <div className="dashboard-add-content-right-side">
-            <div className="dashboard-add-content-card">
-              <h6>Property Image</h6>
-
-              <div className="add-product-form-container">
-                {imgPreview && (
+            {form.image && (
+              <div className="dashboard-add-content-card">
+                <h6>Image Preview</h6>
+                <div className="add-product-form-container">
                   <img
-                    src={imgPreview}
+                    src={URL.createObjectURL(form.image)}
                     alt="Preview"
                     style={{
                       width: "100%",
                       borderRadius: "8px",
-                      marginBottom: "10px",
+                      marginTop: "8px",
                       objectFit: "cover",
+                      maxHeight: "300px"
                     }}
                   />
-                )}
-
-                <input
-                  type="file"
-                  name="image"
-                  onChange={handleFileChange}
-                  style={{ marginTop: "6px" }}
-                />
+                </div>
               </div>
             </div>
           </div>
