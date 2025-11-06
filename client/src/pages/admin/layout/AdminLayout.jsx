@@ -52,7 +52,7 @@ const AdminLayout = () => {
         }
 
         // fetch fresh admin data (includes role)
-        const response = await api.get(`/getagencybyid/${userData.id}`);
+        const response = await api.get(`/getUserById/${userData.id}`);
         if (!mounted) return;
 
         setAdmin(response.data);

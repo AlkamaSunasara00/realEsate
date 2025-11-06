@@ -22,7 +22,7 @@ const EditAdmin = () => {
 
   useEffect(() => {
     const load = async () => {
-      const res = await api.get(`/getagencybyid/${id}`);
+      const res = await api.get(`/getUserById/${id}`);
       setForm(res.data);
       console.log(res.data)
     };

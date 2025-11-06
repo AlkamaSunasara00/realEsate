@@ -141,7 +141,7 @@ const logout = (req, res) => {
   );
 };
 
-const getAgencyById = (req, res) => {
+const getUserById = (req, res) => {
   const { id } = req.params;
   if (!id || isNaN(id)) {
     return res.status(400).json({ error: 'Invalid admin ID' });
@@ -238,7 +238,7 @@ module.exports = {
   refreshToken,
   updateActivity,
   logout,
-  getAgencyById,
+  getUserById,
   addClient,
   getClient,
   updateClient,

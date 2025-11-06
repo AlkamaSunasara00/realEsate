@@ -462,3 +462,6 @@ button {
 }
 
 /* ----delete-modal-container---- */
+.manage-client-data{
+  display: flex;
+}

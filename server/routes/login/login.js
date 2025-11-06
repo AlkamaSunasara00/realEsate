@@ -10,7 +10,7 @@ router.post('/login', login.login);
 router.post('/refresh-token', verifyToken, login.refreshToken);
 router.post('/update-activity', verifyToken, login.updateActivity);
 router.post('/logout', verifyToken, login.logout);
-router.get('/getagencybyid/:id', verifyToken, login.getAgencyById);
+router.get('/getUserById/:id', verifyToken, login.getUserById);
 
 // Example: only admin can add clients via this route (adjust as you need)
 router.post('/add-client', verifyToken, authorizeRole('admin'), upload.single("img"), login.addClient);

@@ -4,6 +4,7 @@ import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
 import { IoPencil } from "react-icons/io5";
 import { MdDeleteForever } from "react-icons/md";
+import { FaRegEye } from "react-icons/fa";
 
 import api from "../../../api/axiosInstance";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -66,7 +67,7 @@ const ManageAdmin = () => {
             <tbody>
               {filtered.map((a) => (
 
-                <tr key={a.id} onClick={() => navigate(`/admin/view-admin/${a.id}`)}>
+                <tr key={a.id}>
                   <td className="product-info admin-profile">
                     <img src={`/uploads/${a.img}`} alt="profile_image" />
                     <span>{a.name}</span>
@@ -81,6 +82,7 @@ const ManageAdmin = () => {
                   <td>{a.createdat?.slice(0, 10)}</td>
 
                   <td className="actions">
+                    <FaRegEye onClick={() => navigate(`/admin/view-admin/${a.id}`)}/>
                     <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" />
                     <MdDeleteForever onClick={() => handleDelete(a.id)} className="delete-btn" />
                   </td>
