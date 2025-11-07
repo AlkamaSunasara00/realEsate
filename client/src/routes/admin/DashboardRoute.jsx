@@ -21,6 +21,7 @@ import GetProperties from "../../pages/admin/properties/Property";
 import PaymentsHistory from "../../pages/admin/payments/PaymentsHistory";
 import AddPayment from "../../pages/admin/payments/AddPayment";
 import UpdatePayment from "../../pages/admin/payments/UpdatePayment";
+import PropertyDetails from "../../pages/admin/properties/propertyDetails";
 
 const AppRoutes = () => {
 
