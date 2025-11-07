@@ -18,7 +18,9 @@ import AssignedProperty from "../../pages/admin/properties/AssignProperties";
 import AddAssignment from "../../pages/admin/properties/AddAssignedProperties";
 import UpdateAssignment from "../../pages/admin/properties/UpdateAssignedProperties";
 import GetProperties from "../../pages/admin/properties/Property";
-import PropertyDetails from "../../pages/admin/properties/propertyDetails";
+import PaymentsHistory from "../../pages/admin/payments/PaymentsHistory";
+import AddPayment from "../../pages/admin/payments/AddPayment";
+import UpdatePayment from "../../pages/admin/payments/UpdatePayment";
 
 const AppRoutes = () => {
 
@@ -49,6 +51,9 @@ const AppRoutes = () => {
         <Route path='addpropertyassigned' element={<AddAssignment />} />
         <Route path='updatepropertyassigned' element={<UpdateAssignment />} />
         <Route path='property/:id' element={<PropertyDetails />} />
+        <Route path='payments' element={<PaymentsHistory />} />
+        <Route path='addpayment' element={<AddPayment />} />
+        <Route path='updatepayment' element={<UpdatePayment />} />
       </Route>
       <Route path="*" element={<Navigate to="/admin/login" replace />} />
     </Routes>

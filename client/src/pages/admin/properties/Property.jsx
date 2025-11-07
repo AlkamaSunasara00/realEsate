@@ -259,3 +259,4 @@ const GetProperties = () => {
 };
 
 export default GetProperties;
+

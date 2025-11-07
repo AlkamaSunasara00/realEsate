@@ -161,6 +161,12 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
             Propertyasigned
           </NavLink>
         </li>
+        <li>
+          <NavLink to="/admin/payments">
+            <RiAdminLine />
+            Payments
+          </NavLink>
+        </li>
           </ul>
       </nav>
 

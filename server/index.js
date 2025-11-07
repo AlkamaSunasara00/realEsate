@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/login/login');
 const property = require("./routes/properties/property");
 const assignedproperties = require("./routes/properties/assignproperty");
+const payments = require("./routes/payment/payments");
 
 
 const { cleanUpExpiredToken, blacklistExpiredToken } = require("./utils/tokenCleanup")
@@ -17,6 +18,7 @@ app.use(bodyParser.json());
 app.use('/admin', authRoutes);
 app.use('', property);
 app.use('', assignedproperties);
+app.use('', payments);
 
 blacklistExpiredToken()
 cleanUpExpiredToken()
