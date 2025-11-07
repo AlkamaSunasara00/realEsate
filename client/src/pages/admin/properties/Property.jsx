@@ -10,9 +10,9 @@ import { useNavigate } from "react-router-dom";
 const GetProperties = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [properties, setProperties] = useState([]);
-  const [assignments, setAssignments] = useState([]); // <-- new
   const navigate = useNavigate();
 
+  // ✅ fetch properties directly from DB (status now reflects true state)
   const fetchProperties = async () => {
     try {
       const res = await axios.get("http://localhost:4500/getproperties");
@@ -23,31 +23,15 @@ const GetProperties = () => {
     }
   };
 
-  const fetchAssignments = async () => {
-    try {
-      const res = await axios.get("http://localhost:4500/getassignedproperties");
-      setAssignments(res.data || []);
-    } catch (err) {
-      console.error("fetchAssignments error", err);
-      // do not alert here, assignments are optional for UI overlay
-    }
-  };
-
-  // unified refresh that fetches both lists
-  const refreshAll = async () => {
-    await Promise.all([fetchProperties(), fetchAssignments()]);
-  };
-
   useEffect(() => {
-    refreshAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchProperties();
   }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this property?")) return;
     try {
       await axios.delete(`http://localhost:4500/deleteproperty/${id}`);
-      await refreshAll();
+      await fetchProperties();
       alert("Property deleted successfully ");
     } catch (err) {
       console.error("Delete error:", err);
@@ -55,27 +39,15 @@ const GetProperties = () => {
     }
   };
 
-  // compute assigned ids set for quick lookup
-  const assignedPropertyIds = new Set((assignments || []).map((a) => String(a.property_id)));
-
-  // derive "effective" status: if property is in assignments => treat as 'reserved'
-  const propertiesWithEffectiveStatus = (properties || []).map((p) => {
-    const originalStatus = String(p.status || "").toLowerCase();
-    const isAssigned = assignedPropertyIds.has(String(p.id));
-    const effectiveStatus = isAssigned ? "reserved" : originalStatus || "available";
-    return { ...p, effectiveStatus };
+  // ✅ filter by real DB status
+  const filtered = properties.filter((p) => {
+    const status = (p.status || "").toLowerCase();
+    if (activeTab === "All") return true;
+    if (activeTab === "Available") return status === "available";
+    if (activeTab === "Reserved") return status === "reserved";
+    if (activeTab === "Sold") return status === "sold";
+    return false;
   });
-
-  // filter by effective status
-  const filtered = propertiesWithEffectiveStatus.filter((p) =>
-    activeTab === "All"
-      ? true
-      : activeTab === "Available"
-      ? p.effectiveStatus === "available"
-      : activeTab === "Reserved"
-      ? p.effectiveStatus === "reserved"
-      : p.effectiveStatus === "sold"
-  );
 
   return (
     <>
@@ -115,7 +87,9 @@ const GetProperties = () => {
           >
             Sold
           </button>
-          <button onClick={refreshAll} style={{ marginLeft: 12 }}>Refresh</button>
+          <button onClick={fetchProperties} style={{ marginLeft: 12 }}>
+            Refresh
+          </button>
         </div>
 
         {/* Table Section */}
@@ -157,14 +131,14 @@ const GetProperties = () => {
                     <td>
                       <span
                         className={`status ${
-                          p.effectiveStatus === "available"
+                          p.status === "available"
                             ? "published"
-                            : p.effectiveStatus === "reserved"
+                            : p.status === "reserved"
                             ? "pending"
                             : "out-of-stock"
                         }`}
                       >
-                        {p.effectiveStatus}
+                        {p.status}
                       </span>
                     </td>
                     <td>{p.createdat?.slice(0, 10) || "—"}</td>
@@ -185,7 +159,7 @@ const GetProperties = () => {
               ) : (
                 <tr>
                   <td colSpan={8} style={{ textAlign: "center", opacity: 0.7 }}>
-                    No properties found 
+                    No properties found
                   </td>
                 </tr>
               )}

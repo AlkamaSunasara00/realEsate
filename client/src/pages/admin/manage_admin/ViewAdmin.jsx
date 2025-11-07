@@ -5,11 +5,12 @@ import { FaEnvelope, FaPhone } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
 import axios from "axios";
 import api from "../../../api/axiosInstance";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function ViewAdmin() {
 
     const { id } = useParams();
+    const navigate = useNavigate();
 
     const [openProperty, setOpenProperty] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -19,6 +20,17 @@ function ViewAdmin() {
     const [clientInfo, setClientInfo] = useState({})
     const [propertId, setPropertId] = useState([]);
     const [propertiesDetail, setPropertiesDetail] = useState([])
+    const [users, setUsers] = useState([]);
+    const [properties, setProperties] = useState([]);
+    const [form, setForm] = useState({
+        property_id: "",
+        client_id: id,
+        assigned_by: localStorage.getItem("admin_id") || "",
+        amount: "",
+        details: "",
+        assigned_at: "",
+    });
+    const [error, setError] = useState("");
 
 
 
@@ -71,7 +83,61 @@ function ViewAdmin() {
     }, [propertId]);
 
 
+    const assignProperties = async () => {
+        try {
+            const res = await axios.get(`http://localhost:4500/getproperties`)
+            const available = (res.data || []).filter(
+                (p) => (p.status || "").toLowerCase() === "available"
+            );
+            setProperties(available);
+        } catch (error) {
+            console.error(error);
 
+        }
+    }
+
+    const handleChange = (e) =>
+        setForm({ ...form, [e.target.name]: e.target.value });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!form.property_id || !form.client_id || !form.assigned_by) {
+            setError("Property, client, and assigned_by are required");
+            return;
+        }
+
+        try {
+            await axios.post(`http://localhost:4500/addassignedproperty`, {
+                property_id: form.property_id,
+                client_id: Number(form.client_id),
+                assigned_by: Number(form.assigned_by),
+                amount: form.amount || null,
+                details: form.details || null,
+                assigned_at: form.assigned_at || new Date().toISOString(),
+            });
+
+            alert("Property assigned successfully ✔");
+            await fetchClientAssignProperties();
+            await assignProperties();
+            setShowSaleModal(false)
+            setForm({
+                property_id: "",
+                client_id: id,
+                assigned_by: localStorage.getItem("admin_id") || "",
+                amount: "",
+                details: "",
+                assigned_at: "",
+            });
+        } catch (err) {
+            console.error("Submit error:", err);
+            setError("Failed to assign property");
+        }
+    };
+
+    useEffect(() => {
+        assignProperties()
+    }, [])
 
 
     const sigCanvas = useRef(null);
@@ -206,83 +272,7 @@ function ViewAdmin() {
                             ) : (
                                 <li> No Properties Awailable</li>
                             )}
-                            {/* <div className="client-property-sale" onClick={() => toggleProperty(1)}>
-                                <div className="client-property-header">
-                                    <span className="client-property-name">456 Oakwood Lane</span>
-                                    <span className="client-property-date">January 20, 2024</span>
-                                </div>
 
-                                <p className="client-sale-price">$750,000</p>
-
-                                <div className="client-sale-plan">
-                                    <p className="client-sale-note">Sale with a 10-year mortgage plan.</p>
-                                    {openProperty === 1 ? <FaChevronUp /> : <FaChevronDown />}
-                                </div>
-
-                                {openProperty === 1 && (
-                                    <div className="client-transaction-box">
-                                        <div className="client-transaction-header">
-                                            <h5>Transaction History</h5>
-                                            <button
-                                                className="client-add-payment-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setShowPaymentModal(true);
-                                                }}
-                                            >
-                                                Add Payment
-                                            </button>
-                                        </div>
-
-                                        <table className="client-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Due Date</th>
-                                                    <th>Amount</th>
-                                                    <th>Status</th>
-                                                    <th>Payment Date</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>February 1, 2024</td>
-                                                    <td>$6,250</td>
-                                                    <td><span className="client-badge client-paid">Paid</span></td>
-                                                    <td>February 1, 2024</td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td>March 1, 2024</td>
-                                                    <td>$6,250</td>
-                                                    <td><span className="client-badge client-paid">Paid</span></td>
-                                                    <td>February 28, 2024</td>
-                                                    <td></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td>April 1, 2024</td>
-                                                    <td>$6,250</td>
-                                                    <td><span className="client-badge client-pending">Pending</span></td>
-                                                    <td>N/A</td>
-                                                    <td>
-                                                        <button
-                                                            className="client-mark-paid-btn"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setShowMarkPaidModal(true);
-                                                            }}
-                                                        >
-                                                            Mark as Paid
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div> */}
 
                         </div>
                     </div>
@@ -326,27 +316,59 @@ function ViewAdmin() {
 
             {/* SALE MODAL */}
             {showSaleModal && (
+
                 <div className="payment-modal-overlay">
                     <div className="payment-modal better-modal mark-paid-modal">
                         <div className="payment-modal-header">
                             <h3>Record a New Sale</h3>
                             <button className="payment-close-btn" onClick={() => setShowSaleModal(false)}>✕</button>
                         </div>
-
-                        <select className="payment-input">
-                            <option>Select property</option>
-                            <option>456 Oakwood Lane</option>
-                            <option>101 Forest Path</option>
+                        {error && (
+                            <div style={{ color: "crimson", marginBottom: 10, fontWeight: 500 }}>
+                                {error}
+                            </div>
+                        )}
+                        <select
+                            name="property_id"
+                            value={form.property_id}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="">-- select property --</option>
+                            {properties.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                    {p.title} — ₹{p.price}
+                                </option>
+                            ))}
                         </select>
 
-                        <input className="payment-input" type="number" placeholder="Total Amount" />
-                        <input className="payment-input" type="date" />
+                        <input
+                            className="payment-input"
+                            name="amount"
+                            value={form.amount}
+                            onChange={handleChange}
+                            placeholder="Amount"
+                        />
+                        <input
+                            className="payment-input"
+                            type="datetime-local"
+                            name="assigned_at"
+                            value={form.assigned_at}
+                            onChange={handleChange}
+                        />
 
-                        <textarea className="payment-textarea" placeholder="Details"></textarea>
+                        <textarea
+                            className="payment-textarea"
+                            name="details"
+                            value={form.details}
+                            onChange={handleChange}
+                            rows={3}
+                            placeholder="Details"
+                        />
 
                         <div className="payment-modal-actions">
                             <button className="payment-cancel" onClick={() => setShowSaleModal(false)}>Cancel</button>
-                            <button className="payment-save">Save Sale</button>
+                            <button className="payment-save" onClick={handleSubmit}>Save Sale</button>
                         </div>
 
                     </div>
