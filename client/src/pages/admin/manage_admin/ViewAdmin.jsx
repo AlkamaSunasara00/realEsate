@@ -123,8 +123,90 @@ function ViewAdmin() {
                     <div className="client-main">
                         <div className="client-sale-box">
                             <h4 className="client-box-title">Sales & Payments</h4>
+                            {propertiesDetail.length > 0 ? (
+                                propertiesDetail.map((p, i) => (
+                                    <div className="client-property-sale" onClick={() => toggleProperty(p.id)} key={i}>
+                                        <div className="client-property-header">
+                                            <span className="client-property-name">{p.title}</span>
+                                            <span className="client-property-date">{p.createdAt}</span>
+                                        </div>
 
-                            <div className="client-property-sale" onClick={() => toggleProperty(1)}>
+                                        <p className="client-sale-price">${p.price}</p>
+
+                                        <div className="client-sale-plan">
+                                            <p className="client-sale-note">{p.description}.</p>
+                                            {openProperty === 1 ? <FaChevronUp /> : <FaChevronDown />}
+                                        </div>
+
+                                        {openProperty === p.id && (
+                                            <div className="client-transaction-box">
+                                                <div className="client-transaction-header">
+                                                    <h5>Transaction History</h5>
+                                                    <button
+                                                        className="client-add-payment-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowPaymentModal(true);
+                                                        }}
+                                                    >
+                                                        Add Payment
+                                                    </button>
+                                                </div>
+
+                                                <table className="client-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Due Date</th>
+                                                            <th>Amount</th>
+                                                            <th>Status</th>
+                                                            <th>Payment Date</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>February 1, 2024</td>
+                                                            <td>$6,250</td>
+                                                            <td><span className="client-badge client-paid">Paid</span></td>
+                                                            <td>February 1, 2024</td>
+                                                            <td></td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>March 1, 2024</td>
+                                                            <td>$6,250</td>
+                                                            <td><span className="client-badge client-paid">Paid</span></td>
+                                                            <td>February 28, 2024</td>
+                                                            <td></td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>April 1, 2024</td>
+                                                            <td>$6,250</td>
+                                                            <td><span className="client-badge client-pending">Pending</span></td>
+                                                            <td>N/A</td>
+                                                            <td>
+                                                                <button
+                                                                    className="client-mark-paid-btn"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setShowMarkPaidModal(true);
+                                                                    }}
+                                                                >
+                                                                    Mark as Paid
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <li> No Properties Awailable</li>
+                            )}
+                            {/* <div className="client-property-sale" onClick={() => toggleProperty(1)}>
                                 <div className="client-property-header">
                                     <span className="client-property-name">456 Oakwood Lane</span>
                                     <span className="client-property-date">January 20, 2024</span>
@@ -200,7 +282,7 @@ function ViewAdmin() {
                                         </table>
                                     </div>
                                 )}
-                            </div>
+                            </div> */}
 
                         </div>
                     </div>
