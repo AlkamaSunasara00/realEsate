@@ -1,4 +1,3 @@
-// controller/login/login.js
 const bcrypt = require('bcrypt');
 const connection = require('../../connection/connection');
 const { generateAccessToken } = require('../../utils/jwtUtils');
