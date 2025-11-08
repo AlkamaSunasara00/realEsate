@@ -1,3 +1,4 @@
+// client/src/pages/admin/properties/UpdateProperty.jsx
 import React, { useEffect, useState } from "react";
 import { MdSave } from "react-icons/md";
 import { IoChevronBackOutline } from "react-icons/io5";
@@ -25,62 +26,45 @@ const UpdateProperty = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
+    const onResize = () => {
       setIsMobile(window.innerWidth <= 768);
       setIsTablet(window.innerWidth <= 1024 && window.innerWidth > 768);
     };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
-
-  useEffect(() => {
-    // if location changes, sync a bit
-    setForm((prev) => ({ ...prev, title: initial.title || prev.title }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial.id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
+  const handleFile = (e) => {
+    const file = e.target.files[0];
     if (file) {
-      setForm((prev) => ({ ...prev, image: file }));
-      const url = URL.createObjectURL(file);
-      setImgPreview(url);
+      setForm(prev => ({ ...prev, image: file }));
+      setImgPreview(URL.createObjectURL(file));
     }
   };
 
-  const isValid = () => {
-    return form.id && form.title.trim() && form.price && form.address.trim();
-  };
+  const isValid = () => form.id && form.title.trim() && form.price && form.address.trim();
 
   const handleUpdate = async () => {
-    if (!isValid()) {
-      alert("Please fill in all required fields");
-      return;
-    }
+    if (!isValid()) return alert("Fill required fields");
     setLoading(true);
-
     const fd = new FormData();
-    fd.append("title", form.title);
-    fd.append("description", form.description);
-    fd.append("address", form.address);
-    fd.append("price", form.price);
-    fd.append("status", form.status);
-    if (form.image instanceof File) fd.append("image", form.image);
+    Object.keys(form).forEach(key => {
+      if (form[key] !== null) fd.append(key, form[key]);
+    });
 
     try {
       await axios.put(`http://localhost:4500/updateproperty/${form.id}`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      alert("Property updated successfully!");
+      alert("Updated successfully!");
       navigate("/admin/property");
     } catch (err) {
-      console.error("Update error:", err);
-      alert("Failed to update property");
+      alert("Failed to update");
     } finally {
       setLoading(false);
     }
@@ -91,7 +75,7 @@ const UpdateProperty = () => {
       <main className="admin-panel-header-div">
         <div className="empty-state-center">
           <h3>No property selected</h3>
-          <button onClick={() => navigate("/admin/property")} className="primary-btn">
+          <button className="primary-btn" onClick={() => navigate("/admin/property")}>
             Go Back
           </button>
         </div>
@@ -101,19 +85,18 @@ const UpdateProperty = () => {
 
   return (
     <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
+      {/* Header: Back + Save */}
       <div className="form-header-top">
         <div className="header-top-left">
-          <button className="header-back-btn" onClick={() => navigate(-1)} aria-label="Go back">
+          <button className="header-back-btn" onClick={() => navigate(-1)}>
             <IoChevronBackOutline /> Back
           </button>
         </div>
-
         <div className="header-top-right">
           <button
             className="primary-btn form-save-btn"
             onClick={handleUpdate}
             disabled={!isValid() || loading}
-            title={isValid() ? "Save changes" : "Fill required fields to save"}
           >
             <MdSave /> {loading ? "Updating..." : "Save Changes"}
           </button>
@@ -122,61 +105,33 @@ const UpdateProperty = () => {
 
       <div className="form-header-title">
         <h5>Edit Property</h5>
-        <p className="subtle-note">Update details and optionally change the image.</p>
+        <p className="subtle-note">Update details and optionally change image.</p>
       </div>
 
       <div className="form-content-grid">
         <div className="form-left">
-          <div className="form-card add-form-card">
+          <div className="form-card">
             <h6>Property Information</h6>
-
             <div className="form-grid">
               <div className="form-field">
                 <label>Title <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="e.g., 3 BHK in Andheri"
-                  value={form.title}
-                  onChange={handleChange}
-                />
+                <input name="title" value={form.title} onChange={handleChange} />
               </div>
-
               <div className="form-field">
                 <label>Price (₹) <span className="required">*</span></label>
-                <input
-                  type="number"
-                  name="price"
-                  placeholder="e.g., 15000000"
-                  value={form.price}
-                  onChange={handleChange}
-                />
+                <input type="number" name="price" value={form.price} onChange={handleChange} />
               </div>
-
               <div className="form-field">
-                <label>Full Address <span className="required">*</span></label>
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="123, Palm Street, Mumbai"
-                  value={form.address}
-                  onChange={handleChange}
-                />
+                <label>Address <span className="required">*</span></label>
+                <input name="address" value={form.address} onChange={handleChange} />
               </div>
             </div>
 
             <div className="form-grid">
               <div className="form-field full-width">
                 <label>Description</label>
-                <textarea
-                  name="description"
-                  placeholder="Describe the property..."
-                  rows={5}
-                  value={form.description}
-                  onChange={handleChange}
-                />
+                <textarea name="description" value={form.description} onChange={handleChange} rows={5} />
               </div>
-
               <div className="form-field">
                 <label>Status</label>
                 <select name="status" value={form.status} onChange={handleChange}>
@@ -189,8 +144,8 @@ const UpdateProperty = () => {
 
             <div className="form-field">
               <label>Change Image (Optional)</label>
-              <input type="file" accept="image/*" onChange={handleFileChange} />
-              <small className="subtle-note">If you don't upload, current image stays.</small>
+              <input type="file" accept="image/*" onChange={handleFile} />
+              <small className="subtle-note">Current image stays if not changed.</small>
             </div>
           </div>
         </div>
@@ -201,14 +156,11 @@ const UpdateProperty = () => {
             {imgPreview ? (
               <img src={imgPreview} alt="Preview" className="preview-img" />
             ) : (
-              <div className="no-image-placeholder">
-                <span>No image</span>
-              </div>
+              <div className="no-image-placeholder">No image</div>
             )}
-
             <div className="preview-meta">
               <div><strong>Title:</strong> {form.title || "—"}</div>
-              <div><strong>Price:</strong> {form.price ? `₹ ${form.price}` : "—"}</div>
+              <div><strong>Price:</strong> {form.price ? `₹${form.price}` : "—"}</div>
               <div><strong>Status:</strong> <span className={`status-badge ${form.status}`}>{form.status}</span></div>
             </div>
           </div>
