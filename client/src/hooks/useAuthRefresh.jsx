@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import api from '../api/axiosInstance';
 
 export default function useAuthRefresh(adminId) {
-  const refreshInterval = 14 * 60 * 1000 + 55 * 1000;
+  const refreshInterval = 120 * 60 * 1000 + 55 * 1000;
   const activityThrottle = 5 * 1000;
   const refreshTimer = useRef(null);
   const activityTimer = useRef(null);
