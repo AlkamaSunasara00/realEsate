@@ -110,12 +110,12 @@ const GetProperties = () => {
         <Breadcrumb
           title="Properties"
           breadcrumbText="Property List"
-          button={{ link: "/admin/addproperty", text: "Add New Property" }}
+          button={{ link: "/admin/addproperty", text: "Add" }}
           isMobile={isMobile}
           isTablet={isTablet}
         />
 
-        <div className="admin-panel-header-tabs">
+        {/* <div className="admin-panel-header-tabs">
           {["All", "Available", "Reserved", "Sold"].map(tab => (
             <button
               key={tab}
@@ -125,7 +125,7 @@ const GetProperties = () => {
               {tab}
             </button>
           ))}
-        </div>
+        </div> */}
 
         {/* Desktop/tablet: table with clickable rows */}
         {!isMobile && (
@@ -252,11 +252,9 @@ const GetProperties = () => {
             )}
           </div>
         )}
-
       </main>
     </>
   );
 };
 
 export default GetProperties;
-

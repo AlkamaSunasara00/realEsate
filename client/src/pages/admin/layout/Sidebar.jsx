@@ -145,7 +145,7 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
                   className={({ isActive }) => isActive ? 'active' : ''}
                 >
                   <RiAdminLine />
-                  <span>Manage Admins</span>
+                  <span>Clients</span>
                 </NavLink>
               </li>
             )}

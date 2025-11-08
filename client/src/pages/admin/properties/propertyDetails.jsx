@@ -21,7 +21,7 @@ const PropertyDetails = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(window.innerWidth < 1024 && window.innerWidth >= 768);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const toggleSidebar = () => setIsSidebarOpen(v => !v);
+  const toggleSidebar = () => setIsSidebarOpen((v) => !v);
 
   useEffect(() => {
     const handleResize = () => {
@@ -74,8 +74,7 @@ const PropertyDetails = () => {
     }
   };
 
-
-    const handleEdit = () => {
+  const handleEdit = () => {
     if (!property) return;
     navigate("/admin/updateproperty", { state: { item: property } });
   };
@@ -86,7 +85,6 @@ const PropertyDetails = () => {
         <Sidebar isMobile={isMobile} isTablet={isTablet} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <Navbar isMobile={isMobile} isTablet={isTablet} toggleSidebar={toggleSidebar} />
 
-        {/* use same wrapper class as GetProperties so spacing matches */}
         <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
           <div className="pd-center">Loading property…</div>
         </main>
@@ -103,7 +101,9 @@ const PropertyDetails = () => {
         <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
           <div className="pd-center">{error}</div>
           <div style={{ textAlign: "center", marginTop: 12 }}>
-            <button className="btn ghost" onClick={() => navigate(-1)}>Back</button>
+            <button className="btn ghost" onClick={() => navigate(-1)}>
+              Back
+            </button>
           </div>
         </main>
       </>
@@ -117,38 +117,56 @@ const PropertyDetails = () => {
       <Sidebar isMobile={isMobile} isTablet={isTablet} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Navbar isMobile={isMobile} isTablet={isTablet} toggleSidebar={toggleSidebar} />
 
-      {/* IMPORTANT: using admin-panel-header-div with mobile/tablet modifiers
-          makes this page behave exactly like GetProperties (no reserved sidebar gap) */}
       <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
-        <header className="pd-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            <IoChevronBackOutline /> Back
-          </button>
-
-          <div className="pd-actions">
-            <button className="btn" onClick={handleEdit}><IoPencil /> Edit</button>
-            <button className="btn-danger" onClick={handleDelete}><MdDeleteForever /> Delete</button>
+        {/* Top controls - Back + Actions row, then title block */}
+        <div className="pd-header-grid">
+          <div className="pd-header-left">
+            <button className="back-btn" onClick={() => navigate(-1)} title="Back to list" aria-label="Back">
+              <IoChevronBackOutline /> Back
+            </button>
           </div>
-        </header>
 
-        <article className="pd-content">
+          <div className="pd-header-right">
+            <div className="pd-actions-inline">
+              <button className="btn ghost" onClick={handleEdit} title="Edit property">
+                <IoPencil /> Edit
+              </button>
+              <button className="btn-danger" onClick={handleDelete} title="Delete property">
+                <MdDeleteForever /> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="pd-title-row">
+          <h1 className="pd-title">{p.title || "Untitled property"}</h1>
+          <div className="pd-subline">
+            <span className="pd-address">{p.address || "Address not provided"}</span>
+            <span className={`pd-status-chip ${p.status || "unknown"}`}>{p.status || "—"}</span>
+          </div>
+        </div>
+
+        <div className="pd-content">
           <section className="pd-main">
             <div className="pd-image-wrap">
-              {p.image ? <img src={`/uploads/${p.image}`} alt={p.title} /> : <div className="no-img">No image</div>}
+              {p.image ? (
+                <img src={`/uploads/${p.image}`} alt={p.title} />
+              ) : (
+                <div className="no-img">No image</div>
+              )}
             </div>
-
-            <h1 className="pd-title">{p.title}</h1>
-            <div className="pd-address">{p.address}</div>
 
             <div className="pd-price-row">
-              <div className="pd-price">₹{p.price}</div>
-              <div className={`pd-status ${p.status || "unknown"}`}>{p.status || "—"}</div>
-            </div>
-
-            <div className="pd-meta">
-              <div>
-                <strong>Added</strong>
-                <div>{p.createdat?.slice(0,10) || "—"}</div>
+              <div className="pd-price">₹{p.price ?? "—"}</div>
+              <div className="pd-small-meta">
+                <div>
+                  <small className="meta-label">Added</small>
+                  <div className="meta-value">{p.createdat ? p.createdat.slice(0, 10) : "—"}</div>
+                </div>
+                <div>
+                  <small className="meta-label">Area</small>
+                  <div className="meta-value">{p.area || "—"}</div>
+                </div>
               </div>
             </div>
 
@@ -162,13 +180,60 @@ const PropertyDetails = () => {
                 <h3>Features</h3>
                 <div className="pd-feat-list">
                   {p.features.split(",").map((f, i) => (
-                    <span key={i} className="feat-pill">{f.trim()}</span>
+                    <span key={i} className="feat-pill">
+                      {f.trim()}
+                    </span>
                   ))}
                 </div>
               </section>
             )}
           </section>
-        </article>
+
+          {/* Right column: sticky actions + summary */}
+          <aside className="pd-compact-actions">
+            <div className="action-top">
+              <div className="action-price">₹{p.price ?? "—"}</div>
+              <div className={`pd-status ${p.status || "unknown"}`}>{p.status || "—"}</div>
+            </div>
+
+            <div className="action-group">
+              <button className="btn primary full" onClick={handleEdit} title="Edit property">
+                <IoPencil /> Edit
+              </button>
+              <button className="btn-danger full" onClick={handleDelete} title="Delete property">
+                <MdDeleteForever /> Delete
+              </button>
+            </div>
+
+            <div className="action-meta">
+              <div>
+                <small className="meta-label">Address</small>
+                <div className="meta-value">{p.address || "—"}</div>
+              </div>
+              <div>
+                <small className="meta-label">Added</small>
+                <div className="meta-value">{p.createdat ? p.createdat.slice(0, 10) : "—"}</div>
+              </div>
+              <div>
+                <small className="meta-label">Status</small>
+                <div className="meta-value">{p.status || "—"}</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* Mobile sticky bottom actions */}
+        <div className="pd-mobile-bottom-actions" role="toolbar" aria-label="Property actions">
+          <button className="btn ghost" onClick={() => navigate(-1)} title="Back">
+            <IoChevronBackOutline /> Back
+          </button>
+          <button className="btn primary" onClick={handleEdit} title="Edit">
+            <IoPencil /> Edit
+          </button>
+          <button className="btn-danger" onClick={handleDelete} title="Delete">
+            <MdDeleteForever /> Delete
+          </button>
+        </div>
       </main>
     </>
   );
