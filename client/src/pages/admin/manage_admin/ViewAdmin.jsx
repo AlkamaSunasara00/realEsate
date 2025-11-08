@@ -10,7 +10,6 @@ import { useNavigate, useParams } from "react-router-dom";
 function ViewAdmin() {
     const { id } = useParams(); // client id
     const admin_id = localStorage.getItem("admin_id")
-    console.log(admin_id)
     const navigate = useNavigate();
 
     const [openProperty, setOpenProperty] = useState(null);
