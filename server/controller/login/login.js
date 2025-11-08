@@ -144,24 +144,33 @@ const logout = (req, res) => {
 
 const getUserById = (req, res) => {
   const { id } = req.params;
+  const requester = req.admin; // comes from verifyToken middleware
+
   if (!id || isNaN(id)) {
     return res.status(400).json({ error: 'Invalid admin ID' });
   }
 
-  connection.query(
-    'SELECT id, name, email, number, img ,status, createdat, updatedat, role FROM admin WHERE id = ?',
-    [id],
-    (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Admin not found' });
-      }
-      res.json(results[0]);
+  // if client, ensure they can only access their own record
+  if (requester.role === 'client' && requester.id !== parseInt(id)) {
+    return res.status(403).json({ error: 'Access denied — cannot view other profiles' });
+  }
+
+  // if admin, allow access to any user
+  const sql = `SELECT id, name, email, number, img, status, createdat, updatedat, role 
+               FROM admin WHERE id = ?`;
+
+  connection.query(sql, [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
     }
-  );
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(results[0]);
+  });
 };
+
+
 
 // addClient, getClient, updateClient, deleteClient left as-is (you may protect them with authorizeRole middleware)
 const addClient = async (req, res) => {

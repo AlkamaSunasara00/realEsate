@@ -1,6 +1,5 @@
 // src/pages/admin/payments/UpdatePayment.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
 
@@ -29,7 +28,7 @@ const UpdatePayment = () => {
       try {
         const [cRes, pRes] = await Promise.all([
           api.get(`${API_ROOT}/admin/clients`),
-          axios.get(`${API_ROOT}/getproperties`),
+          api.get(`${API_ROOT}/getproperties`),
         ]);
         setClients(cRes.data || []);
         setProperties(pRes.data || []);
@@ -62,7 +61,7 @@ const UpdatePayment = () => {
     e.preventDefault();
     if (!form.id) return setError("No payment loaded");
     try {
-      await axios.put(`${API_ROOT}/updatepayment/${form.id}`, {
+      await api.put(`${API_ROOT}/updatepayment/${form.id}`, {
         property_id: form.property_id || null,
         client_id: form.client_id || null,
         amount: Number(form.amount) || null,

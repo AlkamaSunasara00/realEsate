@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { MdSave } from "react-icons/md";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axiosInstance";
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ const AddProperty = () => {
     if (form.image) fd.append("image", form.image);
 
     try {
-      await axios.post("http://localhost:4500/addproperty", fd, {
+      await api.post("http://localhost:4500/addproperty", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Property added successfully!");

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Sidebar from "../layout/Sidebar";
 import Navbar from "../layout/Navbar";
 import "../../../assets/css/admin/property-details.css";
@@ -47,7 +46,7 @@ const PropertyDetails = () => {
       }
       setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:4500/getproperty/${id}`);
+        const res = await api.get(`http://localhost:4500/getproperty/${id}`);
         setProperty(res.data);
       } catch (err) {
         console.error("Failed to fetch property:", err);
@@ -65,7 +64,7 @@ const PropertyDetails = () => {
     const ok = window.confirm("Delete this property permanently?");
     if (!ok) return;
     try {
-      await axios.delete(`http://localhost:4500/deleteproperty/${property.id}`);
+      await api.delete(`http://localhost:4500/deleteproperty/${property.id}`);
       alert("Property deleted");
       navigate(-1);
     } catch (err) {

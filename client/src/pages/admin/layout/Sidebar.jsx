@@ -8,77 +8,53 @@ import '../../../assets/css/admin/sidebar.css';
 const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSidebar }) => {
   const location = useLocation();
   const role = admin?.role || 'client';
+  const adminId = admin?.id;
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
       onLogout();
-      localStorage.clear()
+      localStorage.clear();
     }
   };
 
-  // Close sidebar when route changes on mobile/tablet
+  // Close sidebar when route changes (on mobile/tablet)
   useEffect(() => {
     if ((isMobile || isTablet) && isSidebarOpen) {
-      // Close the sidebar when route changes
-      const timer = setTimeout(() => {
-        toggleSidebar();
-      }, 100);
-
+      const timer = setTimeout(() => toggleSidebar(), 100);
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]); // Only depend on pathname
+  }, [location.pathname]);
 
-  // Prevent body scroll when sidebar is open on mobile/tablet
+  // Disable body scroll on sidebar open
   useEffect(() => {
-    if ((isMobile || isTablet) && isSidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = (isMobile || isTablet) && isSidebarOpen ? 'hidden' : 'unset';
+    return () => (document.body.style.overflow = 'unset');
   }, [isSidebarOpen, isMobile, isTablet]);
 
-  // Handle ESC key to close sidebar
+  // ESC key closes sidebar
   useEffect(() => {
     const handleEscKey = (e) => {
-      if (e.key === 'Escape' && isSidebarOpen && (isMobile || isTablet)) {
-        toggleSidebar();
-      }
+      if (e.key === 'Escape' && isSidebarOpen && (isMobile || isTablet)) toggleSidebar();
     };
     document.addEventListener('keydown', handleEscKey);
     return () => document.removeEventListener('keydown', handleEscKey);
   }, [isSidebarOpen, isMobile, isTablet, toggleSidebar]);
 
-  // Build sidebar classes dynamically
   const getSidebarClasses = () => {
     let classes = 'admin-dashboard-sidebar';
-
-    if (isMobile) {
-      classes += ' mobile-sidebar';
-    } else if (isTablet) {
-      classes += ' tablet-sidebar';
-    }
-
-    if ((isMobile || isTablet) && isSidebarOpen) {
-      classes += ' sidebar-open';
-    }
-
+    if (isMobile) classes += ' mobile-sidebar';
+    else if (isTablet) classes += ' tablet-sidebar';
+    if ((isMobile || isTablet) && isSidebarOpen) classes += ' sidebar-open';
     return classes;
   };
 
-  // Handler for nav link clicks
   const handleNavClick = () => {
-    if ((isMobile || isTablet) && isSidebarOpen) {
-      toggleSidebar();
-    }
+    if ((isMobile || isTablet) && isSidebarOpen) toggleSidebar();
   };
 
   return (
     <>
-      {/* Mobile/Tablet Overlay */}
+      {/* Mobile overlay */}
       {(isMobile || isTablet) && isSidebarOpen && (
         <div
           className="sidebar-overlay"
@@ -90,94 +66,99 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={getSidebarClasses()}
-        aria-label="Main navigation sidebar"
-      >
-        {/* Mobile/Tablet Header with Close Button */}
-        {(isMobile || isTablet) && (
+      <aside className={getSidebarClasses()} aria-label="Main navigation sidebar">
+        {/* Header */}
+        {(isMobile || isTablet) ? (
           <div className="sidebar-mobile-header">
-            <div className="admin-sidebar-logo">
-              <h4>XCART</h4>
-            </div>
-            <button
-              className="sidebar-close-btn"
-              onClick={toggleSidebar}
-              aria-label="Close sidebar"
-            >
+            <div className="admin-sidebar-logo"><h4>XCART</h4></div>
+            <button className="sidebar-close-btn" onClick={toggleSidebar} aria-label="Close sidebar">
               <FiX />
             </button>
           </div>
+        ) : (
+          <div className="admin-sidebar-logo"><h4>XCART</h4></div>
         )}
 
-        {/* Desktop Logo */}
-        {!isMobile && !isTablet && (
-          <div className="admin-sidebar-logo">
-            <h4>XCART</h4>
-          </div>
-        )}
-
+        {/* Sidebar Menu */}
         <nav className="menu-content">
           <h6>MENU</h6>
           <ul>
-            <li>
-              <NavLink
-                to="/admin/dashboard"
-                onClick={handleNavClick}
-                className={({ isActive }) => isActive ? 'active' : ''}
-              >
-                <RxDashboard />
-                <span>Dashboard</span>
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-
-        <nav className="menu-content">
-          <h6>USER MANAGEMENT</h6>
-          <ul>
-            {role === 'admin' && (
+            {role === 'admin' ? (
+              <>
+                <li>
+                  <NavLink
+                    to="/admin/dashboard"
+                    onClick={handleNavClick}
+                    className={({ isActive }) => (isActive ? 'active' : '')}
+                  >
+                    <RxDashboard />
+                    <span>Dashboard</span>
+                  </NavLink>
+                </li>
+              </>
+            ) : (
               <li>
                 <NavLink
-                  to="/admin/manage-admins"
+                  to={`/admin/view-admin/${adminId}`}
                   onClick={handleNavClick}
-                  className={({ isActive }) => isActive ? 'active' : ''}
+                  className={({ isActive }) => (isActive ? 'active' : '')}
                 >
                   <RiAdminLine />
-                  <span>Clients</span>
+                  <span>My Profile</span>
                 </NavLink>
               </li>
             )}
-                   <li>
-          <NavLink to="/admin/property">
-            <RiAdminLine />
-            Properties
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/propertyassigned">
-            <RiAdminLine />
-            Propertyasigned
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/admin/payments">
-            <RiAdminLine />
-            Payments
-          </NavLink>
-        </li>
           </ul>
-      </nav>
+        </nav>
 
-      <div className="menu-content">
-        <h6>OTHERS</h6>
-        <button onClick={handleLogout} className="sidebar-logout-btn">
-          <FiLogOut />
-          <span>Logout</span>
-        </button>
-      </div>
-      </aside >
+        {/* Admin-only section */}
+        {role === 'admin' && (
+          <>
+            <nav className="menu-content">
+              <h6>USER MANAGEMENT</h6>
+              <ul>
+                <li>
+                  <NavLink
+                    to="/admin/manage-admins"
+                    onClick={handleNavClick}
+                    className={({ isActive }) => (isActive ? 'active' : '')}
+                  >
+                    <RiAdminLine />
+                    <span>Clients</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/admin/property" onClick={handleNavClick}>
+                    <RiAdminLine />
+                    <span>Properties</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/admin/propertyassigned" onClick={handleNavClick}>
+                    <RiAdminLine />
+                    <span>Property Assigned</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/admin/payments" onClick={handleNavClick}>
+                    <RiAdminLine />
+                    <span>Payments</span>
+                  </NavLink>
+                </li>
+              </ul>
+            </nav>
+          </>
+        )}
+
+        {/* Logout */}
+        <div className="menu-content">
+          <h6>OTHERS</h6>
+          <button onClick={handleLogout} className="sidebar-logout-btn">
+            <FiLogOut />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
     </>
   );
 };

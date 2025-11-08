@@ -42,7 +42,7 @@ const AddNewAdmin = () => {
         return;
       }
 
-      await api.post("/add-client", form);
+      await api.post("/admin/add-client", form);
       navigate("/admin/manage-admins");
     } catch (err) {
       alert(err?.response?.data?.error || "Something went wrong");

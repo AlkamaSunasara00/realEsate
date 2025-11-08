@@ -23,12 +23,20 @@ const getPaymentById = (req, res) => {
 // get payments by client id
 const getPaymentsByClient = (req, res) => {
   const { clientId } = req.params;
-  const q = "SELECT * FROM payments WHERE client_id = ? ";
+  const requester = req.admin;
+
+  // 🛡️ clients can only see their own payments
+  if (requester.role === "client" && requester.id !== parseInt(clientId)) {
+    return res.status(403).json({ error: "Access denied — cannot view other clients' payments" });
+  }
+
+  const q = "SELECT * FROM payments WHERE client_id = ?";
   connection.query(q, [clientId], (err, data) => {
     if (err) return res.status(500).json({ error: "database error", details: err });
     return res.status(200).json(data);
   });
 };
+
 
 // get payments by property id
 const getPaymentsByProperty = (req, res) => {

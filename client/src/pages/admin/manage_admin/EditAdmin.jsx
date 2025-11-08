@@ -35,7 +35,7 @@ const EditAdmin = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get(`/getagencybyid/${id}`);
+        const res = await api.get(`/admin/getagencybyid/${id}`);
         setForm(res.data);
         console.log(res.data);
       } catch (err) {
@@ -63,7 +63,7 @@ const EditAdmin = () => {
         fd.append("img", document.getElementById("profileImg").files[0]);
       }
 
-      await api.put(`/update-client/${id}`, fd);
+      await api.put(`/admin/update-client/${id}`, fd);
       navigate("/admin/manage-admins");
     } catch (err) {
       alert(err?.response?.data?.error || "Failed to update admin");

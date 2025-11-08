@@ -6,7 +6,6 @@ import { MdSave } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
 import { IoMdArrowDropright } from "react-icons/io";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import api from "../../../api/axiosInstance";
 
 const API_ROOT = "http://localhost:4500";
@@ -35,8 +34,8 @@ export default function UpdateAssignment() {
       try {
         const [uRes, pRes, aRes] = await Promise.all([
           api.get(`${API_ROOT}/admin/clients`),
-          axios.get(`${API_ROOT}/getproperties`),
-          axios.get(`${API_ROOT}/getassignedproperties`),
+          api.get(`${API_ROOT}/getproperties`),
+          api.get(`${API_ROOT}/getassignedproperties`),
         ]);
         setUsers(uRes.data || []);
         setProperties(pRes.data || []);
@@ -115,7 +114,7 @@ export default function UpdateAssignment() {
     }
 
     try {
-      await axios.put(`${API_ROOT}/updateassignedproperty/${form.id}`, normalizePayload(form));
+      await api.put(`${API_ROOT}/updateassignedproperty/${form.id}`, normalizePayload(form));
       alert("Updated ✔");
       navigate("/admin/propertyassigned");
     } catch (err) {

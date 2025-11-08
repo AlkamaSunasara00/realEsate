@@ -4,7 +4,6 @@ import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
 import { IoPencil } from "react-icons/io5";
 import { MdDeleteForever } from "react-icons/md";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
 
@@ -42,7 +41,7 @@ export default function GetAssignments() {
 
   const fetchProperties = async () => {
     try {
-      const res = await axios.get(`${API_ROOT}/getproperties`);
+      const res = await api.get(`${API_ROOT}/getproperties`);
       setProperties(res.data || []);
     } catch (err) {
       console.error("fetchProperties", err);
@@ -52,7 +51,7 @@ export default function GetAssignments() {
   const fetchAssignments = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_ROOT}/getassignedproperties`);
+      const res = await api.get(`${API_ROOT}/getassignedproperties`);
       setAssignments(res.data || []);
     } catch (err) {
       console.error("fetchAssignments", err);
@@ -70,7 +69,7 @@ export default function GetAssignments() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this assignment?")) return;
     try {
-      await axios.delete(`${API_ROOT}/deleteassignedproperty/${id}`);
+      await api.delete(`${API_ROOT}/deleteassignedproperty/${id}`);
       await fetchAssignments();
       await fetchProperties();
       alert("Deleted");

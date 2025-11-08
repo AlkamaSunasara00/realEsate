@@ -1,26 +1,19 @@
 const express = require("express");
 const router = express.Router();
 const payments = require("../../controller/payments/payments");
+const verifyToken = require("../../middleware/verifyToken");
+const authorizeRole = require("../../middleware/authorizeRole");
 
-// list all payments
-router.get("/getpayments", payments.getPayments);
+router.get("/getpayments", verifyToken, authorizeRole("admin"), payments.getPayments);
+router.get("/getpayments/:id", verifyToken, authorizeRole("admin"), payments.getPaymentById);
 
-// get payment by id
-router.get("/getpayments/:id", payments.getPaymentById);
+// clients can only view their own payments
+router.get("/getPaymentsByClientId/:clientId", verifyToken, authorizeRole("admin", "client"), payments.getPaymentsByClient);
 
-// get payments by client (client dashboard)
-router.get("/getPaymentsByClientId/:clientId", payments.getPaymentsByClient);
+router.get("/getpayments/property/:propertyId", verifyToken, authorizeRole("admin"), payments.getPaymentsByProperty);
 
-// get payments by property
-router.get("/getpayments/property/:propertyId", payments.getPaymentsByProperty);
-
-// add payment
-router.post("/addpayment", payments.addPayment);
-
-// update payment
-router.put("/updatepayment/:id", payments.updatePayment);
-
-// delete payment
-router.delete("/deletepayment/:id", payments.deletePayment);
+router.post("/addpayment", verifyToken, authorizeRole("admin"), payments.addPayment);
+router.put("/updatepayment/:id", verifyToken, authorizeRole("admin"), payments.updatePayment);
+router.delete("/deletepayment/:id", verifyToken, authorizeRole("admin"), payments.deletePayment);
 
 module.exports = router;

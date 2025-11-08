@@ -45,7 +45,7 @@ const AdminLayout = () => {
   const handleLogout = async () => {
     try {
       // Call server logout (verifyToken middleware will validate token)
-      await api.post('/logout');
+      await api.post('/admin/logout');
     } catch (err) {
       // Even if API fails, continue clearing local data to force logout on client
       console.error('Logout API error:', err?.response?.data || err.message);
@@ -83,7 +83,7 @@ const AdminLayout = () => {
         }
 
         // fetch fresh admin data (includes role)
-        const response = await api.get(`/getUserById/${userData.id}`);
+        const response = await api.get(`/admin/getUserById/${userData.id}`);
         if (!mounted) return;
 
         setAdmin(response.data);

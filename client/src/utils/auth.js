@@ -2,7 +2,7 @@ import api from '../api/axiosInstance';
 
 export async function logoutUser(navigate) {
   try {
-    await api.post('/logout');
+    await api.post('/admin/logout');
   } catch (err) {
     console.error('Error during logout', err);
   } finally {

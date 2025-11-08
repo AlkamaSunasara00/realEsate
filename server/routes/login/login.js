@@ -1,4 +1,3 @@
-// routes/login/login.js
 const express = require('express');
 const router = express.Router();
 const login = require('../../controller/login/login');
@@ -12,7 +11,7 @@ router.post('/update-activity', verifyToken, login.updateActivity);
 router.post('/logout', verifyToken, login.logout);
 router.get('/getUserById/:id', verifyToken, login.getUserById);
 
-// Example: only admin can add clients via this route (adjust as you need)
+// Admin-only routes
 router.post('/add-client', verifyToken, authorizeRole('admin'), upload.single("img"), login.addClient);
 router.get('/clients', verifyToken, authorizeRole('admin'), login.getClient);
 router.put('/update-client/:id', verifyToken, authorizeRole('admin'), upload.single("img"), login.updateClient);

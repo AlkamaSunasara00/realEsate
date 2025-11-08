@@ -4,10 +4,10 @@ import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
 import { IoPencil } from "react-icons/io5";
 import { MdDeleteForever } from "react-icons/md";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import "../../../assets/css/admin-card.css"; // keep your styles
+import api from "../../../api/axiosInstance";
 
 const GetProperties = () => {
   const [activeTab, setActiveTab] = useState("All");
@@ -20,7 +20,7 @@ const GetProperties = () => {
   // Fetch all properties
   const fetchProperties = async () => {
     try {
-      const res = await axios.get("http://localhost:4500/getproperties");
+      const res = await api.get("http://localhost:4500/getproperties");
       setProperties(res.data || []);
     } catch (err) {
       console.error("fetchProperties error", err);
@@ -30,7 +30,7 @@ const GetProperties = () => {
 
   const fetchAssignments = async () => {
     try {
-      const res = await axios.get("http://localhost:4500/getassignedproperties");
+      const res = await api.get("http://localhost:4500/getassignedproperties");
       // if you need assignments later, store them; currently not used
       // setAssignments(res.data || []);
     } catch (err) {
@@ -68,7 +68,7 @@ const GetProperties = () => {
 
     if (!window.confirm("Are you sure you want to delete this property?")) return;
     try {
-      await axios.delete(`http://localhost:4500/deleteproperty/${id}`);
+      await api.delete(`http://localhost:4500/deleteproperty/${id}`);
       await fetchProperties();
       alert("Property deleted successfully");
     } catch (err) {

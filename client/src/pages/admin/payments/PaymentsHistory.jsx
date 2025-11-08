@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import api from "../../../api/axiosInstance";
 import { useNavigate, NavLink } from "react-router-dom";
 import { IoPencil } from "react-icons/io5";
@@ -30,7 +29,7 @@ const PaymentsHistory = () => {
   // fetch properties
   const fetchProperties = async () => {
     try {
-      const res = await axios.get(`${API_ROOT}/getproperties`);
+      const res = await api.get(`${API_ROOT}/getproperties`);
       setProperties(res.data || []);
     } catch (err) {
       console.error("fetchProperties", err);
@@ -41,7 +40,7 @@ const PaymentsHistory = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_ROOT}/getpayments`);
+      const res = await api.get(`${API_ROOT}/getpayments`);
       setPayments(res.data || []);
     } catch (err) {
       console.error("fetchPayments", err);
@@ -61,7 +60,7 @@ const PaymentsHistory = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this payment?")) return;
     try {
-      await axios.delete(`${API_ROOT}/deletepayment/${id}`);
+      await api.delete(`${API_ROOT}/deletepayment/${id}`);
       await fetchPayments();
       alert("Deleted successfully ✅");
     } catch (err) {

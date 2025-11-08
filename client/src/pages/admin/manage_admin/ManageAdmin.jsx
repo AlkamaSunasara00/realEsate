@@ -22,7 +22,7 @@ const ManageAdmin = () => {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await api.get("/clients");
+        const res = await api.get("/admin/clients");
         setAdmins(res.data || []);
       } catch (error) {
         console.error(error);
@@ -55,7 +55,7 @@ const ManageAdmin = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this admin?")) return;
     try {
-      await api.delete(`/clients/${id}`);
+      await api.delete(`/admin/clients/${id}`);
       setAdmins(prev => prev.filter(a => a.id !== id));
       // if modal open for same admin, close it
       if (selectedAdmin?.id === id) setSelectedAdmin(null);

@@ -6,7 +6,6 @@ import { MdSave } from "react-icons/md";
 import { HiXMark } from "react-icons/hi2";
 import { IoMdArrowDropright } from "react-icons/io";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import axios from "axios";
 import api from "../../../api/axiosInstance";
 
 const API_ROOT = "http://localhost:4500";
@@ -31,7 +30,7 @@ export default function AddAssignment() {
       try {
         const [userRes, propRes] = await Promise.all([
           api.get(`${API_ROOT}/admin/clients`),
-          axios.get(`${API_ROOT}/getproperties`),
+          api.get(`${API_ROOT}/getproperties`),
         ]);
 
         setUsers(userRes.data || []);
@@ -66,7 +65,7 @@ export default function AddAssignment() {
     }
 
     try {
-      await axios.post(`${API_ROOT}/addassignedproperty`, {
+      await api.post(`${API_ROOT}/addassignedproperty`, {
         property_id: form.property_id,
         client_id: Number(form.client_id),
         assigned_by: Number(form.assigned_by),

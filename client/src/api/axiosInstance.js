@@ -1,21 +1,26 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:4500/admin',
+  baseURL: 'http://localhost:4500', // ✅ root, covers everything
 });
 
 api.interceptors.request.use((config) => {
+  // skip auth for login route
   if (config.url.includes('/login')) {
-    return config; // Skip Authorization for login
+    return config;
   }
 
   const userData = JSON.parse(localStorage.getItem('user')) || {};
   const adminId = userData.id;
-  const accessToken = adminId ? localStorage.getItem(`accessToken_${adminId}`) || localStorage.getItem('accessToken') : null;
+  const accessToken =
+    adminId
+      ? localStorage.getItem(`accessToken_${adminId}`) || localStorage.getItem('accessToken')
+      : null;
+
   if (accessToken) {
     config.headers['Authorization'] = `Bearer ${accessToken}`;
-  } else {
   }
+
   return config;
 });
 
@@ -34,7 +39,7 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('admin_id');
-      localStorage.clear()
+      localStorage.clear();
       window.location.href = '/admin/login';
     }
     return Promise.reject(error);

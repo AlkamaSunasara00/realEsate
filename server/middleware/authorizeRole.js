@@ -1,12 +1,16 @@
 // middleware/authorizeRole.js
-// simple middleware to restrict routes to given roles
-module.exports = function authorizeRole(...allowedRoles) {
+module.exports = (...allowedRoles) => {
   return (req, res, next) => {
-    const decoded = req.admin || {};
-    const role = decoded.role;
+    const user = req.admin || {};
+    const role = user.role;
+
     if (!role || !allowedRoles.includes(role)) {
-      return res.status(403).json({ error: 'Forbidden — insufficient privileges' });
+      console.warn(`Access denied: user role=${role}, allowed=${allowedRoles}`);
+      return res
+        .status(403)
+        .json({ error: 'Forbidden — insufficient privileges' });
     }
+
     next();
   };
 };

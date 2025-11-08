@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
 
@@ -34,7 +33,7 @@ export default function AddPayment() {
   // ✅ Fetch properties
   const fetchProperties = async () => {
     try {
-      const res = await axios.get(`${API_ROOT}/getproperties`);
+      const res = await api.get(`${API_ROOT}/getproperties`);
       setProperties(res.data || []);
     } catch (err) {
       console.error("fetchProperties error:", err);
@@ -45,7 +44,7 @@ export default function AddPayment() {
   // ✅ Fetch assigned properties
   const fetchAssignments = async () => {
     try {
-      const res = await axios.get(`${API_ROOT}/getassignedproperties`);
+      const res = await api.get(`${API_ROOT}/getassignedproperties`);
       setAssignments(res.data || []);
     } catch (err) {
       console.error("fetchAssignments error:", err);
@@ -82,7 +81,7 @@ export default function AddPayment() {
     }
 
     try {
-      await axios.post(`${API_ROOT}/addpayment`, {
+      await api.post(`${API_ROOT}/addpayment`, {
         client_id: form.client_id,
         property_id: form.property_id,
         amount: Number(form.amount),

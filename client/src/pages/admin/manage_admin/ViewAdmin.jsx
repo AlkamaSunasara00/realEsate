@@ -3,7 +3,6 @@ import "../../../assets/css/admin/viewAdmin.css";
 import SignaturePad from "react-signature-canvas";
 import { FaEnvelope, FaPhone } from "react-icons/fa";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
-import axios from "axios";
 import api from "../../../api/axiosInstance";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -53,7 +52,7 @@ function ViewAdmin() {
   // ===========================================================
   const fetchClientInfo = async () => {
     try {
-      const res = await api.get(`/getUserById/${id}`);
+      const res = await api.get(`/admin/getUserById/${id}`);
       setClientInfo(res.data);
     } catch (error) {
       console.error(error);
@@ -62,7 +61,7 @@ function ViewAdmin() {
 
   const fetchClientAssignProperties = async () => {
     try {
-      const res = await axios.get(
+      const res = await api.get(
         `http://localhost:4500/getAssignedPropertyByClientId/${id}`
       );
       setPropertId(res.data);
@@ -73,7 +72,7 @@ function ViewAdmin() {
 
   const assignProperties = async () => {
     try {
-      const res = await axios.get(`http://localhost:4500/getproperties`);
+      const res = await api.get(`http://localhost:4500/getproperties`);
       const available = (res.data || []).filter(
         (p) => (p.status || "").toLowerCase() === "available"
       );
@@ -85,7 +84,7 @@ function ViewAdmin() {
 
   const getClientPayments = async () => {
     try {
-      const res = await axios.get(
+      const res = await api.get(
         `http://localhost:4500/getPaymentsByClientId/${id}`
       );
       setClientPayments(res.data);
@@ -105,7 +104,7 @@ function ViewAdmin() {
     const fetchPropertiesById = async () => {
       try {
         const requests = propertId.map((p) =>
-          axios.get(`http://localhost:4500/getproperties/${p.property_id}`)
+          api.get(`http://localhost:4500/getproperties/${p.property_id}`)
         );
         const responses = await Promise.all(requests);
         const formatted = responses.map((r) => r.data);
@@ -132,7 +131,7 @@ function ViewAdmin() {
     }
 
     try {
-      await axios.post(`http://localhost:4500/addassignedproperty`, {
+      await api.post(`http://localhost:4500/addassignedproperty`, {
         property_id: assignedForm.property_id,
         client_id: Number(assignedForm.client_id),
         assigned_by: Number(assignedForm.assigned_by),
@@ -206,7 +205,7 @@ function ViewAdmin() {
       return setPaymentError("Property and Client are required");
 
     try {
-      await axios.post(`http://localhost:4500/addpayment`, {
+      await api.post(`http://localhost:4500/addpayment`, {
         property_id: paymentForm.property_id,
         client_id: Number(paymentForm.client_id),
         amount: paymentForm.amount || null,
@@ -230,7 +229,7 @@ function ViewAdmin() {
     if (!editingPayment) return alert("No payment selected");
 
     try {
-      await axios.put(
+      await api.put(
         `http://localhost:4500/updatepayment/${editingPayment.id}`,
         {
           property_id: paymentForm.property_id,

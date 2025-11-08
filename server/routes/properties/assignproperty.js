@@ -1,21 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const assigned = require("../../controller/properties/assignproperty");
+const verifyToken = require("../../middleware/verifyToken");
+const authorizeRole = require("../../middleware/authorizeRole");
 
-// ✅ Get all assignments
-router.get("/getassignedproperties", assigned.getAssignedProperties);
+// admins can manage, clients can view their own
+router.get("/getassignedproperties", verifyToken, authorizeRole("admin"), assigned.getAssignedProperties);
+router.get("/getassignedproperties/:id", verifyToken, authorizeRole("admin"), assigned.getAssignedPropertyById);
+router.get("/getAssignedPropertyByClientId/:id", verifyToken, authorizeRole("admin", "client"), assigned.getAssignedPropertyByClientId);
 
-// ✅ Get assignment by id
-router.get("/getassignedproperties/:id", assigned.getAssignedPropertyById);
-router.get("/getAssignedPropertyByClientId/:id", assigned.getAssignedPropertyByClientId);
-
-// ✅ Add assignment
-router.post("/addassignedproperty", assigned.addAssignedProperty);
-
-// ✅ Update assignment
-router.put("/updateassignedproperty/:id", assigned.updateAssignedProperty);
-
-// ✅ Delete assignment
-router.delete("/deleteassignedproperty/:id", assigned.deleteAssignedProperty);
+router.post("/addassignedproperty", verifyToken, authorizeRole("admin"), assigned.addAssignedProperty);
+router.put("/updateassignedproperty/:id", verifyToken, authorizeRole("admin"), assigned.updateAssignedProperty);
+router.delete("/deleteassignedproperty/:id", verifyToken, authorizeRole("admin"), assigned.deleteAssignedProperty);
 
 module.exports = router;

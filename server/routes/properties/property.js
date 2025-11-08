@@ -1,21 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const properties = require("../../controller/properties/property"); // adjust path to where you save controller
-const upload = require("../../middleware/fileHandler"); // your multer middleware like in users example
+const properties = require("../../controller/properties/property");
+const upload = require("../../middleware/fileHandler");
+const verifyToken = require("../../middleware/verifyToken");
+const authorizeRole = require("../../middleware/authorizeRole");
 
-// list all
-router.get("/getproperties", properties.getProperties);
+// 🟢 anyone logged in can view properties
+router.get("/getproperties", verifyToken, authorizeRole("admin", "client"), properties.getProperties);
+router.get("/getproperties/:id", verifyToken, authorizeRole("admin", "client"), properties.getPropertyById);
 
-// get by id
-router.get("/getproperties/:id", properties.getPropertyById);
-
-// add (multipart for image)
-router.post("/addproperty", upload.single("image"), properties.addProperty);
-
-// update (multipart if image might be changed)
-router.put("/updateproperty/:id", upload.single("image"), properties.updateProperty);
-
-// delete
-router.delete("/deleteproperty/:id", properties.deleteProperty);
+// 🟣 admin-only mutations
+router.post("/addproperty", verifyToken, authorizeRole("admin"), upload.single("image"), properties.addProperty);
+router.put("/updateproperty/:id", verifyToken, authorizeRole("admin"), upload.single("image"), properties.updateProperty);
+router.delete("/deleteproperty/:id", verifyToken, authorizeRole("admin"), properties.deleteProperty);
 
 module.exports = router;

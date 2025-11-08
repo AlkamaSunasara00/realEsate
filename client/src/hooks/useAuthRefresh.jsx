@@ -17,7 +17,7 @@ export default function useAuthRefresh(adminId) {
       }
 
       try {
-        const { data } = await api.post('/refresh-token', { accessToken: token });
+        const { data } = await api.post('/admin/refresh-token', { accessToken: token });
         localStorage.setItem(`accessToken_${adminId}`, data.accessToken);
         localStorage.setItem(`lastActivityUpdate_${adminId}`, Date.now());
         scheduleRefresh();
@@ -34,11 +34,11 @@ export default function useAuthRefresh(adminId) {
     if (now - lastUpdate < activityThrottle) return;
 
     localStorage.setItem(`lastActivityUpdate_${adminId}`, now);
-    api.post('/update-activity').catch(() => {});
+    api.post('/admin/update-activity').catch(() => {});
   };
 
   const handleLogout = () => {
-    api.post('/logout').catch(() => {}).finally(() => {
+    api.post('/admin/logout').catch(() => {}).finally(() => {
       localStorage.removeItem('admin_id');
       localStorage.removeItem(`accessToken_${adminId}`);
       localStorage.removeItem(`user_${adminId}`);

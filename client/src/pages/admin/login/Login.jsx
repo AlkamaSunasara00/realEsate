@@ -41,7 +41,7 @@ const Login = () => {
 
     try {
       // IMPORTANT: axios baseURL already includes '/admin', so call '/login' (not '/admin/login')
-      const res = await api.post('/login', loginInfo);
+      const res = await api.post('/admin/login', loginInfo);
 
       const admin = res.data.admin;
       const accessToken = res.data.accessToken || res.data.token || null;
