@@ -309,7 +309,7 @@
 .client-mark-paid-btn {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-  padding: 8px 16px;
+  padding: 8px 12px;
   font-size: 13px;
 }
 

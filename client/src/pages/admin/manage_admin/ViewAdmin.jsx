@@ -9,6 +9,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 function ViewAdmin() {
     const { id } = useParams(); // client id
+    const admin_id = localStorage.getItem("admin_id")
+    console.log(admin_id)
     const navigate = useNavigate();
 
     const [openProperty, setOpenProperty] = useState(null);
@@ -534,10 +536,16 @@ function ViewAdmin() {
                                                                 </td>
                                                                 <td>{pay.payment_date ? pay.payment_date.slice(0, 10) : "N/A"}</td>
                                                                 <td>
-                                                                    <button className="client-add-payment-btn" onClick={(e) => handleEditPayment(e, pay)}>Edit</button>
-                                                                    <button className="client-mark-paid-btn" onClick={(e) => openMarkPaidForPayment(e, pay)}>
-                                                                        Mark Paid
-                                                                    </button>
+                                                                    {id === admin_id ? (
+                                                                        <button className="client-mark-paid-btn" onClick={(e) => openMarkPaidForPayment(e, pay)}>
+                                                                            Mark Paid
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button className="client-add-payment-btn" onClick={(e) => handleEditPayment(e, pay)}>Edit</button>
+
+                                                                    )}
+
+
                                                                 </td>
                                                             </tr>
                                                         ))
