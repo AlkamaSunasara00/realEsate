@@ -802,3 +802,87 @@ label {
     page-break-inside: avoid;
   }
 }
+
+
+/* -----------------------------------------------------------------
+   VIEW-ADMIN HEADER – exactly like the Property page
+   ----------------------------------------------------------------- */
+.view-admin-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--primary-border-color);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* left side – back button */
+.header-top-left {
+  display: flex;
+  align-items: center;
+}
+
+/* right side – add sale button */
+.header-top-right {
+  display: flex;
+  align-items: center;
+}
+
+/* back button – same style as Property page */
+.header-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--primary-border-color);
+  border-radius: 8px;
+  background: var(--white-color);
+  color: var(--black-color);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.header-back-btn:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* title – placed **below** the button row */
+.header-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.header-title .client-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* -----------------------------------------------------------------
+   RESPONSIVE – keep the same look on mobile
+   ----------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .header-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .header-top-left,
+  .header-top-right {
+    width: 100%;
+  }
+  .header-back-btn,
+  .client-add-sale-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .header-title .client-title {
+    font-size: 22px;
+  }
+}

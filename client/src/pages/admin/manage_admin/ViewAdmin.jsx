@@ -414,7 +414,7 @@ function ViewAdmin() {
                 }
             }
 
-            await axios.post(`${API_ROOT}/addpaymentconfirmation`, fd, {
+            await api.post(`${API_ROOT}/addpaymentconfirmation`, fd, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
@@ -436,18 +436,28 @@ function ViewAdmin() {
         }
     };
 
-
-    // ===========================================================
-    // 🔹 RENDER UI (mostly unchanged, mark-paid modal updated)
-    // ===========================================================
     return (
         <>
             <div className="client-section">
-                <div className="client-header">
-                    <h2 className="client-title">Client Details</h2>
-                    <button className="client-add-sale-btn" onClick={() => setShowSaleModal(true)}>
-                        Add Sale
-                    </button>
+                {/* ===================== NEW HEADER (Back + Add Sale + Title) ===================== */}
+                <div className="view-admin-header">
+                    <div className="header-top">
+                        <div className="header-top-left">
+                            <button className="header-back-btn" onClick={() => navigate(-1)}>
+                                Back
+                            </button>
+                        </div>
+
+                        <div className="header-top-right">
+                            <button className="client-add-sale-btn" onClick={() => setShowSaleModal(true)}>
+                                Add Sale
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="header-title">
+                        <h2 className="client-title">Client Details</h2>
+                    </div>
                 </div>
 
                 <div className="client-layout">

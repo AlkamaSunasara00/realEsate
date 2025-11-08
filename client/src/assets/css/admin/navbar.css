@@ -8,7 +8,7 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  z-index: 998;
+  z-index: 0;
   transition: all 0.3s ease;
   border-bottom: 1px solid var(--primary-border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -166,7 +166,7 @@
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   min-width: 220px;
-  z-index: 1000;
+  z-index: 2;
   border: 1px solid var(--primary-border-color);
   animation: dropdownFadeIn 0.2s ease;
 }
@@ -334,6 +334,7 @@
     left: 16px;
     width: auto;
     min-width: auto;
+    z-index: 2;
   }
 
   .dropdown-item {
