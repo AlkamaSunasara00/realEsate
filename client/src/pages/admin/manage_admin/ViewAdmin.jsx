@@ -396,14 +396,14 @@ function ViewAdmin() {
                                         : "N/A"}
                                     </td>
                                     <td>
-                                      <button
+                                      {/* <button
                                         className="client-add-payment-btn"
                                         onClick={(e) =>
                                           handleEditPayment(e, pay)
                                         }
                                       >
                                         Edit
-                                      </button>
+                                      </button> */}
                                       <button
                                         className="client-mark-paid-btn"
                                         onClick={(e) => {
