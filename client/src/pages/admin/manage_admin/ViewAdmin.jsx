@@ -14,12 +14,14 @@ function ViewAdmin() {
   const [openProperty, setOpenProperty] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSaleModal, setShowSaleModal] = useState(false);
+  const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
+  const [showRejectComment, setShowRejectComment] = useState(false);
+
   const [clientInfo, setClientInfo] = useState({});
   const [propertId, setPropertId] = useState([]);
   const [propertiesDetail, setPropertiesDetail] = useState([]);
   const [properties, setProperties] = useState([]);
   const [clientPayments, setClientPayments] = useState([]);
-  const [paymenterror, setPaymentError] = useState("");
   const [selectedProperty, setSelectedProperty] = useState(null);
 
   const [assignedForm, setAssignedForm] = useState({
@@ -40,7 +42,7 @@ function ViewAdmin() {
     payment_method: "",
     paid_at: "",
   });
-
+  const [paymenterror, setPaymentError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
 
@@ -235,7 +237,7 @@ function ViewAdmin() {
           client_id: paymentForm.client_id,
           amount: Number(paymentForm.amount) || null,
           payment_method: paymentForm.payment_method || null,
-          status: "completed",
+          status: "pending",
           notes: paymentForm.details || null,
           paid_at: paymentForm.paid_at
             ? paymentForm.paid_at.replace("T", " ")
@@ -401,6 +403,16 @@ function ViewAdmin() {
                                         }
                                       >
                                         Edit
+                                      </button>
+                                      <button
+                                        className="client-mark-paid-btn"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedProperty(p);
+                                          setShowMarkPaidModal(true);
+                                        }}
+                                      >
+                                        Mark Paid
                                       </button>
                                     </td>
                                   </tr>
@@ -587,6 +599,115 @@ function ViewAdmin() {
               >
                 {isEditing ? "Update Payment" : "Save Payment"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MARK PAID / REJECT MODAL ===================== */}
+      {showMarkPaidModal && (
+        <div className="payment-modal-overlay">
+          <div className="payment-modal better-modal mark-paid-modal">
+            <div className="payment-modal-header">
+              <h3>{showRejectComment ? "Reject Payment" : "Confirm Payment"}</h3>
+              <button
+                className="payment-close-btn"
+                onClick={() => {
+                  setShowRejectComment(false);
+                  setShowMarkPaidModal(false);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {!showRejectComment && (
+              <>
+                <input
+                  className="payment-input"
+                  type="date"
+                  defaultValue={new Date().toISOString().slice(0, 10)}
+                />
+                <input
+                  className="payment-input"
+                  type="text"
+                  value={clientInfo.name || ""}
+                  readOnly
+                />
+                <input
+                  className="payment-input"
+                  type="text"
+                  value={selectedProperty?.title || ""}
+                  readOnly
+                />
+                <input
+                  className="payment-input"
+                  type="text"
+                  value={`₹${paymentForm.amount || ""}`}
+                  readOnly
+                />
+
+                <label>Signature</label>
+                <SignaturePad
+                  ref={sigCanvas}
+                  penColor="black"
+                  canvasProps={{ className: "signature-pad" }}
+                />
+                <button
+                  className="signature-clear-btn"
+                  onClick={() => sigCanvas.current.clear()}
+                >
+                  Clear
+                </button>
+              </>
+            )}
+
+            {showRejectComment && (
+              <textarea
+                className="payment-textarea"
+                placeholder="Why are you rejecting this payment?"
+              ></textarea>
+            )}
+
+            <div className="payment-modal-actions">
+              {!showRejectComment ? (
+                <>
+                  <button
+                    className="payment-cancel reject-btn"
+                    onClick={() => setShowRejectComment(true)}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    className="payment-save"
+                    onClick={() => {
+                      alert("Payment marked as paid ✅");
+                      setShowMarkPaidModal(false);
+                    }}
+                  >
+                    Confirm & Mark Paid
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="payment-cancel"
+                    onClick={() => setShowRejectComment(false)}
+                  >
+                    Back
+                  </button>
+                  <button
+                    className="payment-save reject-submit-btn"
+                    onClick={() => {
+                      alert("Rejection submitted ❌");
+                      setShowRejectComment(false);
+                      setShowMarkPaidModal(false);
+                    }}
+                  >
+                    Submit Rejection
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
