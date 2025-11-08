@@ -20,9 +20,8 @@ function ViewAdmin() {
     const [clientInfo, setClientInfo] = useState({})
     const [propertId, setPropertId] = useState([]);
     const [propertiesDetail, setPropertiesDetail] = useState([])
-    const [users, setUsers] = useState([]);
     const [properties, setProperties] = useState([]);
-    const [form, setForm] = useState({
+    const [assignedForm, setAssignedForm] = useState({
         property_id: "",
         client_id: id,
         assigned_by: localStorage.getItem("admin_id") || "",
@@ -30,7 +29,20 @@ function ViewAdmin() {
         details: "",
         assigned_at: "",
     });
-    const [error, setError] = useState("");
+    const [assignedError, setAssignedError] = useState("");
+    const [clientPayments, setClientPayments] = useState([])
+    const [paymentForm, setPaymentForm] = useState({
+        property_id: "",
+        client_id: "",
+        assigned_by: localStorage.getItem("admin_id") || "",
+        amount: "",
+        details: "",
+        assigned_at: "",
+    });
+    const [paymenterror, setPaymentError] = useState("");
+    const [selectedProperty, setSelectedProperty] = useState(null);
+    const [selectedClientId, setSelectedClientId] = useState(id);
+
 
 
 
@@ -96,32 +108,32 @@ function ViewAdmin() {
         }
     }
 
-    const handleChange = (e) =>
-        setForm({ ...form, [e.target.name]: e.target.value });
+    const handleAssignProperty = (e) =>
+        setAssignedForm({ ...assignedForm, [e.target.name]: e.target.value });
 
-    const handleSubmit = async (e) => {
+    const handleAssignPropertySubmit = async (e) => {
         e.preventDefault();
 
-        if (!form.property_id || !form.client_id || !form.assigned_by) {
-            setError("Property, client, and assigned_by are required");
+        if (!assignedForm.property_id || !assignedForm.client_id || !assignedForm.assigned_by) {
+            setAssignedError("Property, client, and assigned_by are required");
             return;
         }
 
         try {
             await axios.post(`http://localhost:4500/addassignedproperty`, {
-                property_id: form.property_id,
-                client_id: Number(form.client_id),
-                assigned_by: Number(form.assigned_by),
-                amount: form.amount || null,
-                details: form.details || null,
-                assigned_at: form.assigned_at || new Date().toISOString(),
+                property_id: assignedForm.property_id,
+                client_id: Number(assignedForm.client_id),
+                assigned_by: Number(assignedForm.assigned_by),
+                amount: assignedForm.amount || null,
+                details: assignedForm.details || null,
+                assigned_at: assignedForm.assigned_at || new Date().toISOString(),
             });
 
             alert("Property assigned successfully ✔");
             await fetchClientAssignProperties();
             await assignProperties();
             setShowSaleModal(false)
-            setForm({
+            setAssignedForm({
                 property_id: "",
                 client_id: id,
                 assigned_by: localStorage.getItem("admin_id") || "",
@@ -131,7 +143,7 @@ function ViewAdmin() {
             });
         } catch (err) {
             console.error("Submit error:", err);
-            setError("Failed to assign property");
+            setAssignedError("Failed to assign property");
         }
     };
 
@@ -139,6 +151,64 @@ function ViewAdmin() {
         assignProperties()
     }, [])
 
+
+    const getClientPayments = async () => {
+        try {
+            const res = await axios.get(`http://localhost:4500/getPaymentsByClientId/${id}`)
+            setClientPayments(res.data)
+            console.log(res.data)
+        } catch (error) {
+            console.error(error);
+
+        }
+    }
+
+    useEffect(() => {
+        getClientPayments()
+    }, [])
+
+    const handlePayment = (e) => {
+        const { name, value } = e.target;
+        setPaymentForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // ✅ Handle form submit
+    const handlePaymentSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!paymentForm.property_id || !paymentForm.client_id || !paymentForm.assigned_by) {
+            setPaymentError("Property, client, and assigned_by are required");
+            return;
+        }
+
+        try {
+            await axios.post(`http://localhost:4500/addpayment`, {
+                property_id: paymentForm.property_id,
+                client_id: Number(paymentForm.client_id),
+                amount: paymentForm.amount || null,
+                payment_method: paymentForm.payment_method || "cash",
+                paid_at: paymentForm.paid_at || new Date().toISOString(),
+                notes: paymentForm.details || null,
+                status: "pending",
+            });
+
+            alert("Payment added successfully ✅");
+            await getClientPayments();
+            setShowPaymentModal(false);
+            setPaymentForm({
+                property_id: "",
+                client_id: "",
+                amount: "",
+                details: "",
+                payment_method: "",
+                paid_at: "",
+            });
+
+        } catch (err) {
+            console.error("Submit error:", err);
+            setPaymentError("Failed to assign property");
+        }
+    };
 
     const sigCanvas = useRef(null);
 
@@ -201,7 +271,7 @@ function ViewAdmin() {
 
                                         <div className="client-sale-plan">
                                             <p className="client-sale-note">{p.description}.</p>
-                                            {openProperty === 1 ? <FaChevronUp /> : <FaChevronDown />}
+                                            {openProperty === p.id ? <FaChevronUp /> : <FaChevronDown />}
                                         </div>
 
                                         {openProperty === p.id && (
@@ -212,17 +282,25 @@ function ViewAdmin() {
                                                         className="client-add-payment-btn"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
+                                                            setSelectedProperty(p); // store clicked property
+                                                            setSelectedClientId(id); // current client
+                                                            setPaymentForm((prev) => ({
+                                                                ...prev,
+                                                                property_id: p.id,
+                                                                client_id: id,
+                                                            }));
                                                             setShowPaymentModal(true);
                                                         }}
                                                     >
                                                         Add Payment
                                                     </button>
+
                                                 </div>
 
                                                 <table className="client-table">
                                                     <thead>
                                                         <tr>
-                                                            <th>Due Date</th>
+                                                            <th>S.No</th>
                                                             <th>Amount</th>
                                                             <th>Status</th>
                                                             <th>Payment Date</th>
@@ -230,39 +308,33 @@ function ViewAdmin() {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <tr>
-                                                            <td>February 1, 2024</td>
-                                                            <td>$6,250</td>
-                                                            <td><span className="client-badge client-paid">Paid</span></td>
-                                                            <td>February 1, 2024</td>
-                                                            <td></td>
-                                                        </tr>
-
-                                                        <tr>
-                                                            <td>March 1, 2024</td>
-                                                            <td>$6,250</td>
-                                                            <td><span className="client-badge client-paid">Paid</span></td>
-                                                            <td>February 28, 2024</td>
-                                                            <td></td>
-                                                        </tr>
-
-                                                        <tr>
-                                                            <td>April 1, 2024</td>
-                                                            <td>$6,250</td>
-                                                            <td><span className="client-badge client-pending">Pending</span></td>
-                                                            <td>N/A</td>
-                                                            <td>
-                                                                <button
-                                                                    className="client-mark-paid-btn"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setShowMarkPaidModal(true);
-                                                                    }}
-                                                                >
-                                                                    Mark as Paid
-                                                                </button>
-                                                            </td>
-                                                        </tr>
+                                                        {clientPayments.filter(pay => pay.property_id === p.id).length > 0 ? (
+                                                            clientPayments
+                                                                .filter(pay => pay.property_id === p.id)
+                                                                .map((pay, idx) => (
+                                                                    <tr key={idx}>
+                                                                        <td>{idx + 1} </td>
+                                                                        <td>₹{pay.amount}</td>
+                                                                        <td>
+                                                                            <span
+                                                                                className={`client-badge ${pay.status?.toLowerCase() === "paid"
+                                                                                    ? "client-paid"
+                                                                                    : "client-pending"
+                                                                                    }`}
+                                                                            >
+                                                                                {pay.status || "unknown"}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td>{pay.payment_date ? pay.payment_date.slice(0, 10) : "N/A"}</td>
+                                                                    </tr>
+                                                                ))
+                                                        ) : (
+                                                            <tr>
+                                                                <td colSpan={4} style={{ textAlign: "center", opacity: 0.6 }}>
+                                                                    No payments for this property
+                                                                </td>
+                                                            </tr>
+                                                        )}
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -285,34 +357,91 @@ function ViewAdmin() {
                     <div className="payment-modal better-modal mark-paid-modal">
                         <div className="payment-modal-header">
                             <h3>Record a New Payment</h3>
-                            <button className="payment-close-btn" onClick={() => setShowPaymentModal(false)}>✕</button>
+                            <button
+                                className="payment-close-btn"
+                                onClick={() => setShowPaymentModal(false)}
+                            >
+                                ✕
+                            </button>
                         </div>
+
+                        {/* auto-filled fields */}
+                        <label>Client</label>
+                        <input
+                            className="payment-input"
+                            value={clientInfo.name || ""}
+                            readOnly
+                            style={{ backgroundColor: "#f5f5f5" }}
+                        />
 
                         <label>Property</label>
-                        <select className="payment-input">
-                            <option>101 Forest Path</option>
-                            <option>456 Oakwood Lane</option>
-                        </select>
+                        <input
+                            className="payment-input"
+                            value={selectedProperty?.title || ""}
+                            readOnly
+                            style={{ backgroundColor: "#f5f5f5" }}
+                        />
 
                         <label>Amount</label>
-                        <input className="payment-input" type="number" placeholder="10000" />
+                        <input
+                            className="payment-input"
+                            type="number"
+                            name="amount"
+                            value={paymentForm.amount}
+                            onChange={handlePayment}
+                            placeholder="Enter amount"
+                        />
 
                         <label>Payment Method</label>
-                        <div className="payment-methods">
-                            <label><input type="radio" name="method" defaultChecked /> Cash</label>
-                            <label><input type="radio" name="method" /> Bank Transfer</label>
-                            <label><input type="radio" name="method" /> Card</label>
-                        </div>
+                        <select
+                            className="payment-input"
+                            name="payment_method"
+                            value={paymentForm.payment_method}
+                            onChange={handlePayment}
+                        >
+                            <option value="">-- select --</option>
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="card">Card</option>
+                        </select>
 
-                        <textarea className="payment-textarea" placeholder="Description (Optional)"></textarea>
+                        <label>Payment Date</label>
+                        <input
+                            className="payment-input"
+                            type="datetime-local"
+                            name="paid_at"
+                            value={paymentForm.paid_at}
+                            onChange={handlePayment}
+                        />
+
+                        <textarea
+                            className="payment-textarea"
+                            name="details"
+                            value={paymentForm.details}
+                            onChange={handlePayment}
+                            placeholder="Description (Optional)"
+                        />
 
                         <div className="payment-modal-actions">
-                            <button className="payment-cancel" onClick={() => setShowPaymentModal(false)}>Cancel</button>
-                            <button className="payment-save">Save Payment</button>
+                            <button
+                                className="payment-cancel"
+                                onClick={() => setShowPaymentModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="payment-save"
+                                onClick={handlePaymentSubmit}
+                            >
+                                Save Payment
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
+
 
             {/* SALE MODAL */}
             {showSaleModal && (
@@ -323,15 +452,15 @@ function ViewAdmin() {
                             <h3>Record a New Sale</h3>
                             <button className="payment-close-btn" onClick={() => setShowSaleModal(false)}>✕</button>
                         </div>
-                        {error && (
+                        {assignedError && (
                             <div style={{ color: "crimson", marginBottom: 10, fontWeight: 500 }}>
-                                {error}
+                                {assignedError}
                             </div>
                         )}
                         <select
                             name="property_id"
-                            value={form.property_id}
-                            onChange={handleChange}
+                            value={assignedForm.property_id}
+                            onChange={handleAssignProperty}
                             required
                         >
                             <option value="">-- select property --</option>
@@ -345,30 +474,30 @@ function ViewAdmin() {
                         <input
                             className="payment-input"
                             name="amount"
-                            value={form.amount}
-                            onChange={handleChange}
+                            value={assignedForm.amount}
+                            onChange={handleAssignProperty}
                             placeholder="Amount"
                         />
                         <input
                             className="payment-input"
                             type="datetime-local"
                             name="assigned_at"
-                            value={form.assigned_at}
-                            onChange={handleChange}
+                            value={assignedForm.assigned_at}
+                            onChange={handleAssignProperty}
                         />
 
                         <textarea
                             className="payment-textarea"
                             name="details"
-                            value={form.details}
-                            onChange={handleChange}
+                            value={assignedForm.details}
+                            onChange={handleAssignProperty}
                             rows={3}
                             placeholder="Details"
                         />
 
                         <div className="payment-modal-actions">
                             <button className="payment-cancel" onClick={() => setShowSaleModal(false)}>Cancel</button>
-                            <button className="payment-save" onClick={handleSubmit}>Save Sale</button>
+                            <button className="payment-save" onClick={handleAssignPropertySubmit}>Save Sale</button>
                         </div>
 
                     </div>

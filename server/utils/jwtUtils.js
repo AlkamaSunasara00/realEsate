@@ -21,7 +21,7 @@ function generateAccessToken(admin, ip, userAgent) {
         userAgent
       },
       ACCESS_TOKEN_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '120m' }
     ),
     jti,
   };

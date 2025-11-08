@@ -109,6 +109,7 @@
 .client-table td {
   padding: 10px 6px;
   border-bottom: 1px solid #e5e7eb;
+  text-align: start;
 }
 
 /* BADGES */

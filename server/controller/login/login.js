@@ -3,7 +3,9 @@ const connection = require('../../connection/connection');
 const { generateAccessToken } = require('../../utils/jwtUtils');
 
 const login = (req, res) => {
+
   const { identifier, password } = req.body;
+
   const ip = req.ip || '127.0.0.1';
   const userAgent = req.headers['user-agent'] || '';
 
@@ -34,7 +36,7 @@ const login = (req, res) => {
 
     const { token: accessToken, jti } = generateAccessToken(admin, ip, userAgent);
     const now = new Date();
-    const expires = new Date(now.getTime() + 15 * 60 * 1000);
+    const expires = new Date(now.getTime() + 120* 60 * 1000);
 
     connection.query(
       'INSERT INTO active_tokens (token_id, admin_id, ip_address, user_agent, issued_at, last_activity, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -78,7 +80,7 @@ const refreshToken = (req, res) => {
       const lastActivity = new Date(tokenData.last_activity);
 
       // **SLIDING SESSION CHECK**
-      if (now - lastActivity > 15 * 60 * 1000) {
+      if (now - lastActivity > 120 * 60 * 1000) {
         connection.query('UPDATE active_tokens SET is_blacklisted = 1 WHERE token_id = ?', [jti]);
         return res.status(401).json({ error: 'Session expired due to inactivity' });
       }
@@ -92,7 +94,7 @@ const refreshToken = (req, res) => {
         connection.query('UPDATE active_tokens SET is_blacklisted = 1 WHERE token_id = ?', [jti], () => {
 
           const { token: newToken, jti: newJti } = generateAccessToken(admin, ip, userAgent);
-          const newExpires = new Date(now.getTime() + 15 * 60 * 1000);
+          const newExpires = new Date(now.getTime() + 120 * 60 * 1000);
 
           connection.query(
             'INSERT INTO active_tokens (token_id, admin_id, ip_address, user_agent, issued_at, last_activity, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)',

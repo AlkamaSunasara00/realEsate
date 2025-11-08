@@ -9,7 +9,7 @@ router.get("/getpayments", payments.getPayments);
 router.get("/getpayments/:id", payments.getPaymentById);
 
 // get payments by client (client dashboard)
-router.get("/getpayments/client/:clientId", payments.getPaymentsByClient);
+router.get("/getPaymentsByClientId/:clientId", payments.getPaymentsByClient);
 
 // get payments by property
 router.get("/getpayments/property/:propertyId", payments.getPaymentsByProperty);

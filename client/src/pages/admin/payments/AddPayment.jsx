@@ -1,4 +1,3 @@
-// src/pages/admin/payments/AddPayment.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -6,136 +5,108 @@ import api from "../../../api/axiosInstance";
 
 const API_ROOT = "http://localhost:4500";
 
-const AddPayment = () => {
+export default function AddPayment() {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
-  const [properties, setProperties] = useState([]); // all properties
-  const [assignments, setAssignments] = useState([]); // assigned_properties rows
-  const [filteredProperties, setFilteredProperties] = useState([]); // properties for selected client
+  const [assignments, setAssignments] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [form, setForm] = useState({
-    property_id: "",
     client_id: "",
+    property_id: "",
     amount: "",
     payment_method: "",
-    status: "pending",
-    notes: "",
     paid_at: "",
+    notes: "",
   });
   const [error, setError] = useState("");
 
-  // Fetch clients
+  // ✅ Fetch clients
   const fetchClients = async () => {
     try {
       const res = await api.get(`${API_ROOT}/admin/clients`);
       setClients(res.data || []);
     } catch (err) {
-      console.error("fetchClients", err);
+      console.error("fetchClients error:", err);
+      setError("Failed to fetch clients");
     }
   };
 
-  // Fetch properties
+  // ✅ Fetch properties
   const fetchProperties = async () => {
     try {
       const res = await axios.get(`${API_ROOT}/getproperties`);
       setProperties(res.data || []);
     } catch (err) {
-      console.error("fetchProperties", err);
+      console.error("fetchProperties error:", err);
+      setError("Failed to fetch properties");
     }
   };
 
-  // Fetch assigned properties
+  // ✅ Fetch assigned properties
   const fetchAssignments = async () => {
     try {
       const res = await axios.get(`${API_ROOT}/getassignedproperties`);
       setAssignments(res.data || []);
     } catch (err) {
-      console.error("fetchAssignments", err);
+      console.error("fetchAssignments error:", err);
+      setError("Failed to fetch assignments");
     }
   };
 
+  // 🧠 mount → fetch everything independently
   useEffect(() => {
-    const adminId = localStorage.getItem("admin_id");
-    if (adminId) {
-      setForm((f) => ({
-        ...f,
-        notes: f.notes ? f.notes : `Recorded by admin:${adminId}`,
-      }));
-    }
-    (async () => {
-      await Promise.all([fetchClients(), fetchProperties(), fetchAssignments()]);
-    })();
+    fetchClients();
+    fetchProperties();
+    fetchAssignments();
   }, []);
 
-  // when client changes, filter only that client's assigned properties
-  useEffect(() => {
-    if (!form.client_id) {
-      setFilteredProperties([]);
-      setForm((prev) => ({ ...prev, property_id: "" }));
-      return;
-    }
+  // 🧩 filter properties for selected client
+  const filteredProperties = assignments
+    .filter((a) => String(a.client_id) === form.client_id)
+    .map((a) => properties.find((p) => String(p.id) === String(a.property_id)))
+    .filter(Boolean);
 
-    const assignedPropertyIds = assignments
-      .filter((a) => String(a.client_id) === String(form.client_id))
-      .map((a) => String(a.property_id));
-
-    const propsForClient = properties.filter((p) =>
-      assignedPropertyIds.includes(String(p.id))
-    );
-    setFilteredProperties(propsForClient);
-
-    if (
-      form.property_id &&
-      !assignedPropertyIds.includes(String(form.property_id))
-    ) {
-      setForm((prev) => ({ ...prev, property_id: "" }));
-    }
-  }, [form.client_id, assignments, properties]);
-
-  // handle change
+  // 🖊️ handle form changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   };
 
-  // build payload
-  const payloadFromForm = () => ({
-    property_id: form.property_id,
-    client_id: form.client_id || null,
-    amount: Number(form.amount),
-    payment_method: form.payment_method || null, // goes to DB
-    status: form.status || "completed",
-    notes: form.notes || null,
-    paid_at: form.paid_at ? form.paid_at.replace("T", " ") : null,
-  });
-
-  // submit form
+  // 💾 submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.property_id || !form.amount) {
-      setError("Property and amount are required");
+
+    if (!form.client_id || !form.property_id || !form.amount) {
+      setError("Please fill all required fields");
       return;
     }
+
     try {
-      await axios.post(`${API_ROOT}/addpayment`, payloadFromForm());
-      alert("Payment recorded ✅");
+      await axios.post(`${API_ROOT}/addpayment`, {
+        client_id: form.client_id,
+        property_id: form.property_id,
+        amount: Number(form.amount),
+        payment_method: form.payment_method,
+        paid_at: form.paid_at || new Date().toISOString(),
+        notes: form.notes || null,
+        status: "paid",
+      });
+
+      alert("Payment added successfully ✅");
       navigate("/admin/payments");
     } catch (err) {
-      console.error("add payment", err);
+      console.error("addPayment error:", err);
       setError("Failed to add payment ❌");
     }
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: "2rem", maxWidth: 520 }}>
       <h3>Add Payment</h3>
-      {error && <div style={{ color: "crimson" }}>{error}</div>}
+      {error && <div style={{ color: "crimson", marginBottom: 10 }}>{error}</div>}
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "grid", gap: 8, maxWidth: 520 }}
-      >
-        {/* Select client */}
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* Client */}
         <label>Client</label>
         <select name="client_id" value={form.client_id} onChange={handleChange}>
           <option value="">-- select client --</option>
@@ -146,22 +117,20 @@ const AddPayment = () => {
           ))}
         </select>
 
-        {/* Select property (only assigned) */}
+        {/* Property */}
         <label>Property</label>
         <select
           name="property_id"
           value={form.property_id}
           onChange={handleChange}
-          required
+          disabled={!form.client_id}
         >
           <option value="">
-            {form.client_id
-              ? "-- select property assigned to this client --"
-              : "-- select client first --"}
+            {form.client_id ? "-- select property --" : "-- select client first --"}
           </option>
           {filteredProperties.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.title || p.id} — ₹{p.price}
+              {p.title} — ₹{p.price}
             </option>
           ))}
         </select>
@@ -169,36 +138,33 @@ const AddPayment = () => {
         {/* Amount */}
         <label>Amount</label>
         <input
+          type="number"
           name="amount"
           value={form.amount}
           onChange={handleChange}
-          type="number"
-          step="0.01"
-          required
+          placeholder="Enter amount"
         />
 
-        {/* Payment Method Dropdown */}
+        {/* Payment Method */}
         <label>Payment Method</label>
         <select
           name="payment_method"
           value={form.payment_method}
           onChange={handleChange}
-          required
         >
-          <option value="">-- select payment method --</option>
+          <option value="">-- select --</option>
           <option value="cash">Cash</option>
           <option value="upi">UPI</option>
           <option value="bank_transfer">Bank Transfer</option>
           <option value="cheque">Cheque</option>
           <option value="card">Card</option>
-          <option value="other">Other</option>
         </select>
 
-        {/* Paid at */}
+        {/* Paid At */}
         <label>Paid At</label>
         <input
-          name="paid_at"
           type="datetime-local"
+          name="paid_at"
           value={form.paid_at}
           onChange={handleChange}
         />
@@ -210,38 +176,13 @@ const AddPayment = () => {
           value={form.notes}
           onChange={handleChange}
           rows={3}
+          placeholder="Optional notes..."
         />
 
-        {/* Buttons */}
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="submit">Save Payment</button>
-          <button
-            type="button"
-            onClick={() =>
-              setForm({
-                property_id: "",
-                client_id: "",
-                amount: "",
-                payment_method: "",
-                status: "pending",
-                notes: "",
-                paid_at: "",
-              })
-            }
-          >
-            Clear
-          </button>
-        </div>
+        <button type="submit" style={{ marginTop: 10 }}>
+          Save Payment
+        </button>
       </form>
-
-      {/* Debug info */}
-      <div style={{ marginTop: 20, opacity: 0.8, fontSize: 13 }}>
-        <div>
-          Assigned properties for selected client: {filteredProperties.length}
-        </div>
-      </div>
     </div>
   );
-};
-
-export default AddPayment;
+}
