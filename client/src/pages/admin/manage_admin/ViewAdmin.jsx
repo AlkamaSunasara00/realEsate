@@ -9,19 +9,141 @@ import { useNavigate, useParams } from "react-router-dom";
 
 function ViewAdmin() {
 
-    const { id } = useParams();
-    const navigate = useNavigate();
+  const [openProperty, setOpenProperty] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [showMarkPaidModal, setShowMarkPaidModal] = useState(false);
+  const [showRejectComment, setShowRejectComment] = useState(false);
 
-    const [openProperty, setOpenProperty] = useState(null);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [showSaleModal, setShowSaleModal] = useState(false);
-    const [showMarkPaidModal, setShowMarkPaidModal] = useState(true);
-    const [showRejectComment, setShowRejectComment] = useState(false);
-    const [clientInfo, setClientInfo] = useState({})
-    const [propertId, setPropertId] = useState([]);
-    const [propertiesDetail, setPropertiesDetail] = useState([])
-    const [properties, setProperties] = useState([]);
-    const [assignedForm, setAssignedForm] = useState({
+  const [clientInfo, setClientInfo] = useState({});
+  const [propertId, setPropertId] = useState([]);
+  const [propertiesDetail, setPropertiesDetail] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [clientPayments, setClientPayments] = useState([]);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+
+  const [assignedForm, setAssignedForm] = useState({
+    property_id: "",
+    client_id: id,
+    assigned_by: localStorage.getItem("admin_id") || "",
+    amount: "",
+    details: "",
+    assigned_at: "",
+  });
+  const [assignedError, setAssignedError] = useState("");
+
+  const [paymentForm, setPaymentForm] = useState({
+    property_id: "",
+    client_id: "",
+    amount: "",
+    details: "",
+    payment_method: "",
+    paid_at: "",
+  });
+  const [paymenterror, setPaymentError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+
+  const sigCanvas = useRef(null);
+
+  // ===========================================================
+  // 🔹 FETCH CLIENT INFO, PROPERTIES, AND PAYMENTS
+  // ===========================================================
+  const fetchClientInfo = async () => {
+    try {
+      const res = await api.get(`/getUserById/${id}`);
+      setClientInfo(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchClientAssignProperties = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:4500/getAssignedPropertyByClientId/${id}`
+      );
+      setPropertId(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const assignProperties = async () => {
+    try {
+      const res = await axios.get(`http://localhost:4500/getproperties`);
+      const available = (res.data || []).filter(
+        (p) => (p.status || "").toLowerCase() === "available"
+      );
+      setProperties(available);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getClientPayments = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:4500/getPaymentsByClientId/${id}`
+      );
+      setClientPayments(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchClientInfo();
+    fetchClientAssignProperties();
+    assignProperties();
+    getClientPayments();
+  }, []);
+
+  useEffect(() => {
+    const fetchPropertiesById = async () => {
+      try {
+        const requests = propertId.map((p) =>
+          axios.get(`http://localhost:4500/getproperties/${p.property_id}`)
+        );
+        const responses = await Promise.all(requests);
+        const formatted = responses.map((r) => r.data);
+        setPropertiesDetail(formatted);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    if (propertId.length) fetchPropertiesById();
+  }, [propertId]);
+
+  // ===========================================================
+  // 🔹 ASSIGN SALE HANDLERS
+  // ===========================================================
+  const handleAssignProperty = (e) =>
+    setAssignedForm({ ...assignedForm, [e.target.name]: e.target.value });
+
+  const handleAssignPropertySubmit = async (e) => {
+    e.preventDefault();
+
+    if (!assignedForm.property_id || !assignedForm.client_id) {
+      setAssignedError("Property and Client are required");
+      return;
+    }
+
+    try {
+      await axios.post(`http://localhost:4500/addassignedproperty`, {
+        property_id: assignedForm.property_id,
+        client_id: Number(assignedForm.client_id),
+        assigned_by: Number(assignedForm.assigned_by),
+        amount: assignedForm.amount || null,
+        details: assignedForm.details || null,
+        assigned_at: assignedForm.assigned_at || new Date().toISOString(),
+      });
+
+      alert("Property assigned successfully ✅");
+      await fetchClientAssignProperties();
+      await assignProperties();
+      setShowSaleModal(false);
+      setAssignedForm({
         property_id: "",
         client_id: id,
         assigned_by: localStorage.getItem("admin_id") || "",
@@ -53,6 +175,19 @@ function ViewAdmin() {
         } catch (error) {
             console.error(error);
 
+    try {
+      await axios.put(
+        `http://localhost:4500/updatepayment/${editingPayment.id}`,
+        {
+          property_id: paymentForm.property_id,
+          client_id: paymentForm.client_id,
+          amount: Number(paymentForm.amount) || null,
+          payment_method: paymentForm.payment_method || null,
+          status: "pending",
+          notes: paymentForm.details || null,
+          paid_at: paymentForm.paid_at
+            ? paymentForm.paid_at.replace("T", " ")
+            : null,
         }
     }
 
@@ -240,106 +375,63 @@ function ViewAdmin() {
                             <p className="client-contact-row"><FaPhone /> {clientInfo.number}</p>
                         </div>
 
-                        <div className="client-card">
-                            <h4 className="client-subtext">Associated Properties</h4>
-                            <ul className="client-property-list">
-
-                                {propertiesDetail.length > 0 ? (
-                                    propertiesDetail.map((p, i) => (
-                                        <li key={i}>{p.title}  {p.address} </li>
-                                    ))
-                                ) : (
-                                    <li>No Properties Assigned</li>
-                                )}
-
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="client-main">
-                        <div className="client-sale-box">
-                            <h4 className="client-box-title">Sales & Payments</h4>
-                            {propertiesDetail.length > 0 ? (
-                                propertiesDetail.map((p, i) => (
-                                    <div className="client-property-sale" onClick={() => toggleProperty(p.id)} key={i}>
-                                        <div className="client-property-header">
-                                            <span className="client-property-name">{p.title}</span>
-                                            <span className="client-property-date">{p.createdAt}</span>
-                                        </div>
-
-                                        <p className="client-sale-price">${p.price}</p>
-
-                                        <div className="client-sale-plan">
-                                            <p className="client-sale-note">{p.description}.</p>
-                                            {openProperty === p.id ? <FaChevronUp /> : <FaChevronDown />}
-                                        </div>
-
-                                        {openProperty === p.id && (
-                                            <div className="client-transaction-box">
-                                                <div className="client-transaction-header">
-                                                    <h5>Transaction History</h5>
-                                                    <button
-                                                        className="client-add-payment-btn"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedProperty(p); // store clicked property
-                                                            setSelectedClientId(id); // current client
-                                                            setPaymentForm((prev) => ({
-                                                                ...prev,
-                                                                property_id: p.id,
-                                                                client_id: id,
-                                                            }));
-                                                            setShowPaymentModal(true);
-                                                        }}
-                                                    >
-                                                        Add Payment
-                                                    </button>
-
-                                                </div>
-
-                                                <table className="client-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>S.No</th>
-                                                            <th>Amount</th>
-                                                            <th>Status</th>
-                                                            <th>Payment Date</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {clientPayments.filter(pay => pay.property_id === p.id).length > 0 ? (
-                                                            clientPayments
-                                                                .filter(pay => pay.property_id === p.id)
-                                                                .map((pay, idx) => (
-                                                                    <tr key={idx}>
-                                                                        <td>{idx + 1} </td>
-                                                                        <td>₹{pay.amount}</td>
-                                                                        <td>
-                                                                            <span
-                                                                                className={`client-badge ${pay.status?.toLowerCase() === "paid"
-                                                                                    ? "client-paid"
-                                                                                    : "client-pending"
-                                                                                    }`}
-                                                                            >
-                                                                                {pay.status || "unknown"}
-                                                                            </span>
-                                                                        </td>
-                                                                        <td>{pay.payment_date ? pay.payment_date.slice(0, 10) : "N/A"}</td>
-                                                                    </tr>
-                                                                ))
-                                                        ) : (
-                                                            <tr>
-                                                                <td colSpan={4} style={{ textAlign: "center", opacity: 0.6 }}>
-                                                                    No payments for this property
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
+                        <table className="client-table">
+                          <thead>
+                            <tr>
+                              <th>S.No</th>
+                              <th>Amount</th>
+                              <th>Status</th>
+                              <th>Payment Date</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {clientPayments.filter(
+                              (pay) => pay.property_id === p.id
+                            ).length > 0 ? (
+                              clientPayments
+                                .filter((pay) => pay.property_id === p.id)
+                                .map((pay, idx) => (
+                                  <tr key={idx}>
+                                    <td>{idx + 1}</td>
+                                    <td>₹{pay.amount}</td>
+                                    <td>
+                                      <span
+                                        className={`client-badge ${
+                                          pay.status?.toLowerCase() === "paid"
+                                            ? "client-paid"
+                                            : "client-pending"
+                                        }`}
+                                      >
+                                        {pay.status || "unknown"}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {pay.payment_date
+                                        ? pay.payment_date.slice(0, 10)
+                                        : "N/A"}
+                                    </td>
+                                    <td>
+                                      <button
+                                        className="client-add-payment-btn"
+                                        onClick={(e) =>
+                                          handleEditPayment(e, pay)
+                                        }
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        className="client-mark-paid-btn"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedProperty(p);
+                                          setShowMarkPaidModal(true);
+                                        }}
+                                      >
+                                        Mark Paid
+                                      </button>
+                                    </td>
+                                  </tr>
                                 ))
                             ) : (
                                 <li> No Properties Awailable</li>
@@ -548,11 +640,131 @@ function ViewAdmin() {
                             )}
                         </div>
 
-                    </div>
-                </div>
+            <div className="payment-modal-actions">
+              <button className="payment-cancel" onClick={closePaymentModal}>
+                Cancel
+              </button>
+              <button
+                className="payment-save"
+                onClick={isEditing ? handleUpdatePayment : handleAddPayment}
+              >
+                {isEditing ? "Update Payment" : "Save Payment"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MARK PAID / REJECT MODAL ===================== */}
+      {showMarkPaidModal && (
+        <div className="payment-modal-overlay">
+          <div className="payment-modal better-modal mark-paid-modal">
+            <div className="payment-modal-header">
+              <h3>{showRejectComment ? "Reject Payment" : "Confirm Payment"}</h3>
+              <button
+                className="payment-close-btn"
+                onClick={() => {
+                  setShowRejectComment(false);
+                  setShowMarkPaidModal(false);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {!showRejectComment && (
+              <>
+                <input
+                  className="payment-input"
+                  type="date"
+                  defaultValue={new Date().toISOString().slice(0, 10)}
+                />
+                <input
+                  className="payment-input"
+                  type="text"
+                  value={clientInfo.name || ""}
+                  readOnly
+                />
+                <input
+                  className="payment-input"
+                  type="text"
+                  value={selectedProperty?.title || ""}
+                  readOnly
+                />
+                <input
+                  className="payment-input"
+                  type="text"
+                  value={`₹${paymentForm.amount || ""}`}
+                  readOnly
+                />
+
+                <label>Signature</label>
+                <SignaturePad
+                  ref={sigCanvas}
+                  penColor="black"
+                  canvasProps={{ className: "signature-pad" }}
+                />
+                <button
+                  className="signature-clear-btn"
+                  onClick={() => sigCanvas.current.clear()}
+                >
+                  Clear
+                </button>
+              </>
             )}
-        </>
-    );
+
+            {showRejectComment && (
+              <textarea
+                className="payment-textarea"
+                placeholder="Why are you rejecting this payment?"
+              ></textarea>
+            )}
+
+            <div className="payment-modal-actions">
+              {!showRejectComment ? (
+                <>
+                  <button
+                    className="payment-cancel reject-btn"
+                    onClick={() => setShowRejectComment(true)}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    className="payment-save"
+                    onClick={() => {
+                      alert("Payment marked as paid ✅");
+                      setShowMarkPaidModal(false);
+                    }}
+                  >
+                    Confirm & Mark Paid
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="payment-cancel"
+                    onClick={() => setShowRejectComment(false)}
+                  >
+                    Back
+                  </button>
+                  <button
+                    className="payment-save reject-submit-btn"
+                    onClick={() => {
+                      alert("Rejection submitted ❌");
+                      setShowRejectComment(false);
+                      setShowMarkPaidModal(false);
+                    }}
+                  >
+                    Submit Rejection
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default ViewAdmin;
