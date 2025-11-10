@@ -1,24 +1,42 @@
 // src/pages/admin/login/Login.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../../api/axiosInstance';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import '../../../assets/css/login.css';
+
+// Simple XSS-safe sanitization (DOMPurify alternative)
+const sanitizeInput = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .trim();
+};
 
 const Login = () => {
   const [loginInfo, setLoginInfo] = useState({ identifier: '', password: '' });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState({ text: '', type: '' });
   const navigate = useNavigate();
   const location = useLocation();
+  const identifierRef = useRef(null);
 
+  // Focus first input on mount
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    identifierRef.current?.focus();
+  }, []);
+
+  // Check existing session
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
     const adminId = userData.id;
-    const isLoggedIn = adminId
-      ? localStorage.getItem(`isLoggedIn_${adminId}`)
-      : null;
-    const token = adminId
-      ? localStorage.getItem(`accessToken_${adminId}`)
-      : localStorage.getItem('accessToken');
+    const isLoggedIn = adminId ? localStorage.getItem(`isLoggedIn_${adminId}`) : null;
+    const token = adminId ? localStorage.getItem(`accessToken_${adminId}`) : localStorage.getItem('accessToken');
 
     if (token && isLoggedIn === 'true') {
       navigate('/admin/dashboard', { replace: true });
@@ -26,63 +44,84 @@ const Login = () => {
 
     const params = new URLSearchParams(location.search);
     if (params.get('reason') === 'new-login') {
-      setMessage('You were logged out because you logged in from another device.');
+      setMessage({
+        text: 'You were logged out because you logged in from another device.',
+        type: 'error'
+      });
     }
   }, [navigate, location]);
 
+  const validateForm = () => {
+    const newErrors = {};
+    const sanitizedIdentifier = sanitizeInput(loginInfo.identifier);
+    const sanitizedPassword = sanitizeInput(loginInfo.password);
+
+    if (!sanitizedIdentifier) newErrors.identifier = 'Email or phone is required';
+    if (!sanitizedPassword) newErrors.password = 'Password is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
-    setLoginInfo({ ...loginInfo, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const sanitized = sanitizeInput(value);
+    setLoginInfo(prev => ({ ...prev, [name]: sanitized }));
+    setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
-    setMessage('');
+    setMessage({ text: '', type: '' });
 
     try {
-      // IMPORTANT: axios baseURL already includes '/admin', so call '/login' (not '/admin/login')
-      const res = await api.post('/admin/login', loginInfo);
+      const res = await api.post('/admin/login', {
+        identifier: loginInfo.identifier,
+        password: loginInfo.password
+      });
 
       const admin = res.data.admin;
-      const accessToken = res.data.accessToken || res.data.token || null;
+      const accessToken = res.data.accessToken || res.data.token;
+
       if (!admin || !accessToken) {
-        throw new Error('Invalid server response: missing admin or token');
+        throw new Error('Invalid response from server');
       }
 
       const adminId = admin.id;
 
-      // per-admin keys
-      localStorage.setItem('admin_id',adminId)
+      // Store securely
+      localStorage.setItem('admin_id', adminId);
       localStorage.setItem(`accessToken_${adminId}`, accessToken);
       localStorage.setItem(`user_${adminId}`, JSON.stringify(admin));
       localStorage.setItem(`isLoggedIn_${adminId}`, 'true');
-      localStorage.setItem(`lastActivityUpdate_${adminId}`, Date.now());
+      localStorage.setItem(`lastActivityUpdate_${adminId}`, Date.now().toString());
 
-      // backward compatibility/global keys
+      // Backward compatibility
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('user', JSON.stringify(admin));
       localStorage.setItem('isLoggedIn', 'true');
 
-      // navigate to dashboard
-      navigate('/admin/dashboard', { replace: true });
+      setMessage({ text: 'Login successful! Redirecting...', type: 'success' });
+      setTimeout(() => navigate('/admin/dashboard', { replace: true }), 800);
     } catch (error) {
-      // extract meaningful error message if possible
       const serverError = error?.response?.data;
-      let errorMessage = 'Login failed. Please try again.';
+      let errorText = 'Login failed. Please try again.';
 
       if (serverError) {
-        // if server returned an object with error field
-        if (typeof serverError === 'object' && serverError.error) {
-          errorMessage = serverError.error;
-        } else if (typeof serverError === 'string') {
-          errorMessage = serverError;
-        }
+        errorText = typeof serverError === 'object' && serverError.error
+          ? serverError.error
+          : typeof serverError === 'string'
+            ? serverError
+            : errorText;
       } else if (error?.message) {
-        errorMessage = error.message;
+        errorText = error.message;
       }
 
-      console.error('Login error:', error?.response || errorMessage);
-      setMessage(errorMessage);
+      console.error('Login error:', error);
+      setMessage({ text: errorText, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -93,31 +132,61 @@ const Login = () => {
       <div className="loginn wrap">
         <h1 className="h1" id="login">Admin Login</h1>
 
-        {message && <div style={{ color: 'red', marginBottom: '10px' }}>{message}</div>}
+        {/* Success / Error Messages */}
+        {message.text && (
+          <div className={message.type === 'error' ? 'error-message' : 'success-message'}>
+            {message.type === 'error' ? <FiAlertCircle /> : <FiCheckCircle />}
+            <span>{message.text}</span>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <input
+            ref={identifierRef}
             name="identifier"
             type="text"
-            onChange={handleChange}
             value={loginInfo.identifier}
+            onChange={handleChange}
             placeholder="Email or Phone Number"
             autoComplete="username"
             required
             disabled={loading}
+            className={errors.identifier ? 'input-error' : ''}
+            aria-describedby={errors.identifier ? 'identifier-error' : undefined}
           />
+          {errors.identifier && (
+            <div id="identifier-error" className="error-message" style={{ marginTop: '-8px', marginBottom: '8px', fontSize: '13px' }}>
+              {errors.identifier}
+            </div>
+          )}
+
           <input
             name="password"
             type="password"
-            onChange={handleChange}
             value={loginInfo.password}
+            onChange={handleChange}
             placeholder="Password"
             autoComplete="current-password"
             required
             disabled={loading}
+            className={errors.password ? 'input-error' : ''}
+            aria-describedby={errors.password ? 'password-error' : undefined}
           />
-          <button className="button type1" type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          {errors.password && (
+            <div id="password-error" className="error-message" style={{ marginTop: '-8px', marginBottom: '8px', fontSize: '13px' }}>
+              {errors.password}
+            </div>
+          )}
+
+          <button className="button type1" type="submit" disabled={loading} aria-label={loading ? 'Logging in' : 'Login'}>
+            {loading ? (
+              <>
+                <div className="spinner"></div>
+                Logging in...
+              </>
+            ) : (
+              'Login'
+            )}
           </button>
         </form>
       </div>

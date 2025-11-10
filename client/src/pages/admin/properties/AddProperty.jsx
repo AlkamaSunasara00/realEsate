@@ -81,7 +81,6 @@ const AddProperty = () => {
 
       <div className="form-header-title">
         <h5>Add New Property</h5>
-        <p className="subtle-note">Fill required fields (Title, Price, Address)</p>
       </div>
 
       <div className="form-content-grid">
