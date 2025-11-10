@@ -405,15 +405,15 @@ function ViewAdmin() {
             fd.append("reject_reason", rejectReason);
 
             // if a signature exists on pad, include it (optional)
-            if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
-                try {
-                    const sigBlob = await getSignatureBlob();
-                    fd.append("signature", sigBlob, `signature_reject_${Date.now()}.png`);
-                } catch (sigErr) {
-                    // signature optional for rejection; log but continue
-                    console.warn("Failed to attach rejection signature (continuing without it):", sigErr);
-                }
-            }
+            // if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+            //     try {
+            //         const sigBlob = await getSignatureBlob();
+            //         fd.append("signature", sigBlob, `signature_reject_${Date.now()}.png`);
+            //     } catch (sigErr) {
+            //         // signature optional for rejection; log but continue
+            //         console.warn("Failed to attach rejection signature (continuing without it):", sigErr);
+            //     }
+            // }
 
             await api.post(`${API_ROOT}/addpaymentconfirmation`, fd, {
                 headers: { "Content-Type": "multipart/form-data" },
@@ -701,9 +701,9 @@ function ViewAdmin() {
                                     placeholder="Why are you rejecting this payment?"
                                 />
 
-                                <label>Optional Signature (sign to confirm rejection)</label>
-                                <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
-                                <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
+                                {/* <label>Optional Signature (sign to confirm rejection)</label>
+                                <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} /> */}
+                                {/* <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button> */}
 
                                 <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
                                     <button className="payment-cancel" onClick={() => setShowRejectComment(false)}>Back</button>
