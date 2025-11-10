@@ -12,10 +12,9 @@ router.get("/getPaymentsByClientId/:clientId", verifyToken, authorizeRole("admin
 
 router.get("/getpayments/property/:propertyId", verifyToken, authorizeRole("admin"), payments.getPaymentsByProperty);
 
-router.post("/addpayment", verifyToken, authorizeRole("admin","client"), payments.addPayment);
-router.post("/addpayment", verifyToken, authorizeRole("admin","client"), payments.addPayment);
-router.put("/updatePaymentStatus/:id", verifyToken, authorizeRole("admin","client"), payments.updatePaymentStatus);
-
+router.post("/addpayment", verifyToken, authorizeRole("admin", "client"), payments.addPayment);
+router.put("/updatePaymentStatus/:id", verifyToken, authorizeRole("admin", "client"), payments.updatePaymentStatus);
+router.put("/updatepayment/:id", verifyToken, authorizeRole("admin", "client"), payments.updatePayment);
 router.delete("/deletepayment/:id", verifyToken, authorizeRole("admin"), payments.deletePayment);
 
 module.exports = router;

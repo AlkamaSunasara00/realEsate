@@ -6,7 +6,7 @@ const verifyToken = require("../../middleware/verifyToken");
 const authorizeRole = require("../../middleware/authorizeRole");
 
 // 🟢 anyone logged in can view properties
-router.get("/getproperties", verifyToken, authorizeRole("admin", "client"), properties.getProperties);
+router.get("/getproperties", verifyToken, authorizeRole("admin"), properties.getProperties);
 router.get("/getproperties/:id", verifyToken, authorizeRole("admin", "client"), properties.getPropertyById);
 
 // 🟣 admin-only mutations
