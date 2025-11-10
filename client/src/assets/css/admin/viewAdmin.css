@@ -875,11 +875,11 @@ label {
   }
   .header-top-left,
   .header-top-right {
-    width: 100%;
+    width: fit-content;
   }
   .header-back-btn,
   .client-add-sale-btn {
-    width: 100%;
+    width: fit-content;
     justify-content: center;
   }
   .header-title .client-title {

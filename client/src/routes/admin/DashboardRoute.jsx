@@ -22,6 +22,7 @@ import PaymentsHistory from "../../pages/admin/payments/PaymentsHistory";
 import AddPayment from "../../pages/admin/payments/AddPayment";
 import UpdatePayment from "../../pages/admin/payments/UpdatePayment";
 import PropertyDetails from "../../pages/admin/properties/propertyDetails";
+import ClientDetails from "../../pages/admin/manage_admin/ClientDetails";
 
 const AppRoutes = () => {
 
@@ -42,6 +43,7 @@ const AppRoutes = () => {
       >
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="manage-admins" element={<ManageAdmin />} />
+        <Route path="client/:id" element={<ClientDetails />} />
         <Route path="add-new_admin" element={<AddNewAdmin />} />
         <Route path="edit-admin/:id" element={<EditAdmin />} />
         <Route path="view-admin/:id" element={<ViewAdmin />} />

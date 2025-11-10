@@ -1,0 +1,138 @@
+/* client-details.css
+   Matches AddProperty header layout:
+   - Top bar (form-header-top) Back left, Payment right
+   - Title row (form-header-title) below with right-side actions (Edit/Delete)
+   Colors/spacing follow dashboard theme
+*/
+
+:root{
+  --primary-btn-bg: #3858d6;
+  --primary-font-color: #8b8e99;
+  --white-color: #fff;
+  --primary-border-color: #e4e7e9;
+  --black-color: #191c1f;
+  --danger: #ed4f32;
+}
+
+/* Reuse AddProperty classes */
+.form-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px 0;
+}
+
+.header-top-left,
+.header-top-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+}
+
+/* Title row */
+.form-header-title {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: row;
+   align-items:center;
+   justify-content: space-between;
+}
+
+.form-header-title h5 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #191c1f;
+}
+
+.subtle-note {
+  font-size: 13px;
+  color: var(--primary-font-color);
+  margin-top: 4px;
+}
+
+/* Right side actions next to title */
+.header-actions-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Button styles (consistent with project) */
+.header-back-btn,
+.info-btn,
+.primary-btn,
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid var(--primary-border-color);
+  background: var(--white-color);
+}
+
+/* Back */
+.header-back-btn { color: var(--black-color); }
+.header-back-btn:hover { background: #fafbff; }
+
+/* Payment */
+.info-btn { background: rgba(56,88,214,0.06); color: var(--primary-btn-bg); border-color: rgba(56,88,214,0.12); }
+.info-btn:hover { background: rgba(56,88,214,0.10); }
+
+/* Edit */
+.primary-btn { background: var(--primary-btn-bg); color: #fff; border-color: var(--primary-btn-bg); }
+.primary-btn:hover { filter: brightness(0.95); }
+
+/* Delete */
+.cancel-btn { background: rgba(237,79,50,0.06); color: var(--danger); border-color: rgba(237,79,50,0.12); padding: 8px 12px; font-size: 13px; }
+.cancel-btn:hover { background: rgba(237,79,50,0.10); }
+
+/* Content cards */
+.form-content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.form-left { display: flex; flex-direction: column; gap: 16px; }
+
+.form-card {
+  background: #fff;
+  border: 1px solid var(--primary-border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.form-card h6 { margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: #191c1f; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+
+/* profile */
+.profile-info { display: flex; gap: 16px; align-items: flex-start; }
+.profile-img { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; border: 1px solid #e6e6e6; }
+.profile-details h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; color: #191c1f; }
+.profile-details p { margin: 6px 0; color: #555; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.profile-bio { margin-top: 12px; color: var(--primary-font-color); font-size: 14px; line-height: 1.5; }
+
+/* responsive tweaks (mobile & tablet) */
+@media (max-width: 1024px) {
+  .admin-panel-header-div { padding-left: 16px !important; padding-right: 16px !important; }
+  .form-content-grid { grid-template-columns: 1fr; }
+
+  /* small: top row remains as AddProperty */
+  .form-header-top { gap: 10px; display: flex; justify-content: space-between; flex-direction: row;}
+  .form-header-title { display: flex;flex-direction: row; align-items:center; justify-content: space-between; }
+
+  /* move the right-side actions to same row on larger mobiles */
+  .header-actions-right { align-self: flex-end; }
+}
+
+@media (max-width: 768px) {
+  .form-header-title { align-items: center;display: flex;flex-direction: row;}
+  .profile-info { flex-direction: column; align-items: center; text-align: center; }
+  .profile-img { width: 100px; height: 100px; }
+  .profile-details h3 { font-size: 18px; }
+  .header-back-btn, .info-btn, .primary-btn { padding: 8px 12px; font-size: 13px; width: fit-content; }
+  .cancel-btn { padding: 6px 10px; font-size: 13px; }
+}

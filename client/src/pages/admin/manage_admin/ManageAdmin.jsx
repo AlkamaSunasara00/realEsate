@@ -149,17 +149,17 @@ const ManageAdmin = () => {
           </div>
         )}
 
-        {/* === Mobile: stacked cards like screenshot === */}
-        {isMobile && (
+        
+        {(isMobile || isTablet) && (
           <div className="cardlist" style={{ marginTop: 16 }}>
             {filtered.length > 0 ? filtered.map(a => (
               <article
                 key={a.id}
                 className="card-row"
-                onClick={() => setSelectedAdmin(a)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter") setSelectedAdmin(a); }}
+                onClick={() => navigate(`/admin/client/${a.id}`)} // <-- navigate to new client page for mobile & tablet
+                onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/client/${a.id}`); }}
               >
                 <div className="card-left">
                   <img src={`/uploads/${a.img}`} alt={a.name} />
@@ -181,6 +181,7 @@ const ManageAdmin = () => {
             )}
           </div>
         )}
+
 
         {/* === Modal for selected admin === */}
         {selectedAdmin && (
