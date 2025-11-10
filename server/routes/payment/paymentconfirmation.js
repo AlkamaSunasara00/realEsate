@@ -5,6 +5,7 @@ const upload = require("../../middleware/fileHandler"); // multer - already in y
 
 router.get("/getpaymentconfirmations", controller.getAllConfirmations);
 router.get("/getpaymentconfirmation/:id", controller.getConfirmationById);
+router.get("/getConfirmationByPaymentId/:payment_id", controller.getConfirmationByPaymentId);
 
 // create with optional signature file (field name: "signature")
 router.post("/addpaymentconfirmation", upload.single("signature"), controller.createConfirmation);

@@ -136,10 +136,23 @@ const deleteConfirmation = (req, res) => {
   });
 };
 
+const getConfirmationByPaymentId = (req, res) => {
+  const { payment_id } = req.params;
+  const query="SELECT * FROM payment_confirmations WHERE payment_id= ?"
+  connection.query(query,[payment_id],(err,result)=>{
+    if (err) {
+      return res.status(500);
+    } else {
+      return res.json(result)
+    }
+  })
+}
+
 module.exports = {
   getAllConfirmations,
   getConfirmationById,
   createConfirmation,
   updateConfirmation,
   deleteConfirmation,
+  getConfirmationByPaymentId
 };

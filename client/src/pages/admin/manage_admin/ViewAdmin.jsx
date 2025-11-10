@@ -1,5 +1,5 @@
 // src/pages/admin/ViewAdmin.jsx
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "../../../assets/css/admin/viewAdmin.css";
 import SignaturePad from "react-signature-canvas";
 import { FaEnvelope, FaPhone } from "react-icons/fa";
@@ -10,9 +10,10 @@ import { useNavigate, useParams } from "react-router-dom";
 function ViewAdmin() {
     const { id } = useParams(); // client id
     const admin_id = localStorage.getItem("admin_id")
-    const user = JSON.parse(localStorage.getItem("user") || "{}")
+    const user = JSON.parse(localStorage.getItem("user"))
     const user_role = user.role
     const navigate = useNavigate();
+
 
     const [openProperty, setOpenProperty] = useState(null);
 
@@ -60,82 +61,13 @@ function ViewAdmin() {
     const [markConfirmedAt, setMarkConfirmedAt] = useState(""); // datetime-local string
     const [rejectReason, setRejectReason] = useState("");
     const [markError, setMarkError] = useState("");
+    const [confirmationPayments, setConfirmationPayments] = useState({});
+
+
 
     const sigCanvas = useRef(null);
 
     const API_ROOT = "http://localhost:4500";
-
-    // ----------------- helpers -----------------
-    const formatCurrency = (val) => {
-        const n = Number(val) || 0;
-        // Indian rupee style, fallback simple
-        return `₹${n.toLocaleString("en-IN")}`;
-    };
-    // ---------- helper extractors & sums (replace existing helpers) ----------
-    const getAmountFromPayment = (p) => {
-        // tolerant extractor for amount-like fields
-        // prefer numeric 'amount' but fallback to other names commonly used
-        const candidates = [p?.amount, p?.paid_amount, p?.payment_amount, p?.value, p?.price];
-        for (let c of candidates) {
-            if (c !== undefined && c !== null && c !== "") {
-                const n = Number(c);
-                if (!Number.isNaN(n)) return n;
-            }
-        }
-        return 0;
-    };
-
-    const getStatusFromPayment = (p) => {
-        // tolerant status normalizer
-        // common variants mapped to normalized string: 'completed' | 'pending' | 'rejected' | 'refunded'
-        const raw = (p?.status || p?.payment_status || p?.state || "").toString().trim().toLowerCase();
-
-        if (!raw) return "pending"; // default fallback
-
-        if (["completed", "complete", "paid", "done", "successful", "success"].includes(raw)) return "completed";
-        if (["pending", "waiting", "in_progress", "inprogress", "processing"].includes(raw)) return "pending";
-        if (["rejected", "failed", "declined", "cancelled", "canceled"].includes(raw)) return "rejected";
-        if (["refunded", "refund"].includes(raw)) return "refunded";
-
-        // otherwise return raw so nothing gets hidden
-        return raw;
-    };
-
-    const getPaymentSumsForProperty = (propertyId) => {
-        // tolerant filtering: compare strings so '1' vs 1 won't break
-        const payments = clientPayments.filter(p => String(p?.property_id) === String(propertyId));
-        const completedSum = payments
-            .filter(p => getStatusFromPayment(p) === "completed")
-            .reduce((s, p) => s + getAmountFromPayment(p), 0);
-        const pendingSum = payments
-            .filter(p => getStatusFromPayment(p) === "pending")
-            .reduce((s, p) => s + getAmountFromPayment(p), 0);
-        const rejectedSum = payments
-            .filter(p => getStatusFromPayment(p) === "rejected")
-            .reduce((s, p) => s + getAmountFromPayment(p), 0);
-        const refundedSum = payments
-            .filter(p => getStatusFromPayment(p) === "refunded")
-            .reduce((s, p) => s + getAmountFromPayment(p), 0);
-        const allSum = payments.reduce((s, p) => s + getAmountFromPayment(p), 0);
-
-        return { completedSum, pendingSum, rejectedSum, refundedSum, allSum, count: payments.length };
-    };
-
-    // overall totals across assigned properties
-    const overallTotals = useMemo(() => {
-        const totals = propertiesDetail.reduce((acc, prop) => {
-            const sums = getPaymentSumsForProperty(prop.id);
-            acc.totalPrice += Number(prop.price) || 0;
-            acc.totalPaid += sums.completedSum;
-            acc.totalPending += sums.pendingSum;
-            acc.totalRejected += sums.rejectedSum;
-            acc.totalAll += sums.allSum;
-            return acc;
-        }, { totalPrice: 0, totalPaid: 0, totalPending: 0, totalRejected: 0, totalAll: 0 });
-        totals.totalRemaining = Math.max(0, totals.totalPrice - totals.totalPaid);
-        return totals;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [propertiesDetail, clientPayments]);
 
     // ===========================================================
     // 🔹 FETCH CLIENT INFO, PROPERTIES, AND PAYMENTS
@@ -171,12 +103,10 @@ function ViewAdmin() {
             console.error("assignProperties", error);
         }
     };
+
     const getClientPayments = async () => {
         try {
             const res = await api.get(`${API_ROOT}/getPaymentsByClientId/${id}`);
-            // debug: show raw response in console (first 5 items)
-            console.log("GET /getPaymentsByClientId raw:", res?.data?.slice ? res.data.slice(0, 10) : res.data);
-            // set state
             setClientPayments(res.data || []);
         } catch (error) {
             console.error("getClientPayments", error);
@@ -472,6 +402,17 @@ function ViewAdmin() {
             fd.append("confirmed_at", markConfirmedAt ? markConfirmedAt.replace("T", " ") : null);
             fd.append("reject_reason", rejectReason);
 
+            // if a signature exists on pad, include it (optional)
+            // if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+            //     try {
+            //         const sigBlob = await getSignatureBlob();
+            //         fd.append("signature", sigBlob, `signature_reject_${Date.now()}.png`);
+            //     } catch (sigErr) {
+            //         // signature optional for rejection; log but continue
+            //         console.warn("Failed to attach rejection signature (continuing without it):", sigErr);
+            //     }
+            // }
+
             await api.post(`${API_ROOT}/addpaymentconfirmation`, fd, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
@@ -506,6 +447,21 @@ function ViewAdmin() {
         }
     }
 
+    const fetchConfirmationByPaymentId = async (paymentId) => {
+        try {
+            const res = await api.get(`${API_ROOT}/getConfirmationByPaymentId/${paymentId}`);
+            const data = res.data[0];
+
+            setConfirmationPayments(prev => ({
+                ...prev,
+                [paymentId]: data
+            }));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
     return (
         <>
             <div className="client-section">
@@ -522,7 +478,9 @@ function ViewAdmin() {
                                 <button className="client-add-sale-btn" onClick={() => setShowSaleModal(true)}>
                                     Add Sale
                                 </button>
-                            ) : (<></>)}
+                            ) : (
+                                <></>
+                            )}
 
                         </div>
                     </div>
@@ -546,36 +504,9 @@ function ViewAdmin() {
                             <h4 className="client-subtext">Associated Properties</h4>
                             <ul className="client-property-list">
                                 {propertiesDetail.length > 0 ? (
-                                    propertiesDetail.map((p, i) => {
-                                        const sums = getPaymentSumsForProperty(p.id);
-                                        const remaining = Math.max(0, (Number(p.price) || 0) - sums.completedSum);
-                                        return (
-                                            <li key={i}>
-                                                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                                                    <div>
-                                                        <strong>{p.title}</strong> — {p.address}
-                                                    </div>
-                                                    <div style={{ textAlign: "right", minWidth: 150 }}>
-                                                        <div style={{ fontSize: 13 }}>Total: {formatCurrency(p.price)}</div>
-                                                        <div style={{ fontSize: 13 }}>Paid: {formatCurrency(sums.completedSum)}</div>
-                                                        <div style={{ fontSize: 13 }}>Pending: {formatCurrency(sums.pendingSum)}</div>
-                                                        <div style={{ fontSize: 13, fontWeight: 600 }}>Remaining: {formatCurrency(remaining)}</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })
+                                    propertiesDetail.map((p, i) => <li key={i}>{p.title} — {p.address}</li>)
                                 ) : <li>No Properties Assigned</li>}
                             </ul>
-                        </div>
-
-                        {/* overall summary */}
-                        <div className="client-card" style={{ marginTop: 12 }}>
-                            <h4 className="client-subtext">Summary</h4>
-                            <p style={{ margin: "6px 0" }}>Total Price: <strong>{formatCurrency(overallTotals.totalPrice)}</strong></p>
-                            <p style={{ margin: "6px 0" }}>Total Paid: <strong>{formatCurrency(overallTotals.totalPaid)}</strong></p>
-                            <p style={{ margin: "6px 0" }}>Total Pending: <strong>{formatCurrency(overallTotals.totalPending)}</strong></p>
-                            <p style={{ margin: "6px 0" }}>Total Remaining: <strong>{formatCurrency(overallTotals.totalRemaining)}</strong></p>
                         </div>
                     </div>
 
@@ -583,272 +514,352 @@ function ViewAdmin() {
                     <div className="client-main">
                         <div className="client-sale-box">
                             <h4 className="client-box-title">Sales & Payments</h4>
-                            {propertiesDetail.length > 0 ? propertiesDetail.map((p, i) => {
-                                const sums = getPaymentSumsForProperty(p.id);
-                                const remaining = Math.max(0, (Number(p.price) || 0) - sums.completedSum);
-                                return (
-                                    <div className="client-property-sale" onClick={() => toggleProperty(p.id)} key={i}>
-                                        <div className="client-property-header">
-                                            <div>
-                                                <span className="client-property-name">{p.title}</span>
-                                                <div style={{ fontSize: 12, color: "#666" }}>{p.address}</div>
-                                            </div>
-                                            <div style={{ textAlign: "right" }}>
-                                                <div style={{ fontSize: 14, fontWeight: 700 }}>{formatCurrency(p.price)}</div>
-                                                <div style={{ fontSize: 12 }}>{formatCurrency(sums.completedSum)} paid • {formatCurrency(remaining)} remaining</div>
-                                            </div>
-                                        </div>
+                            {propertiesDetail.length > 0 ? propertiesDetail.map((p, i) => (
+                                <div
+                                    className="client-property-sale"
+                                    onClick={() => {
+                                        toggleProperty(p.id);
 
-                                        <p className="client-sale-price">₹{p.price}</p>
-                                        <div className="client-sale-plan">
-                                            <p className="client-sale-note">{p.description}</p>
-                                            {openProperty === p.id ? <FaChevronUp /> : <FaChevronDown />}
-                                        </div>
+                                        // fetch confirmations for all payments of this property
+                                        clientPayments
+                                            .filter(pay => pay.property_id === p.id)
+                                            .forEach(pay => fetchConfirmationByPaymentId(pay.id));
+                                    }}
+                                    key={i}
+                                >
 
-                                        {openProperty === p.id && (
-                                            <div className="client-transaction-box">
-                                                <div className="client-transaction-header">
-                                                    <h5>Transaction History</h5>
-                                                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                                        {/* <div style={{ fontSize: 13, color: "#333" }}>
-                                                            Paid: <strong>{formatCurrency(sums.completedSum)}</strong>
-                                                            {" • "}
-                                                            Pending: <strong>{formatCurrency(sums.pendingSum)}</strong>
-                                                        </div> */}
-                                                        <button className="client-add-payment-btn" onClick={(e) => { e.stopPropagation(); handleOpenAddPayment(p); }}>
-                                                            Add Payment
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <table className="client-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>S.No</th>
-                                                            <th>Amount</th>
-                                                            <th>Status</th>
-                                                            <th>Payment Date</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {clientPayments.filter(pay => String(pay.property_id) === String(p.id))
-                                                            .length > 0 ? (
-                                                            clientPayments.filter(pay => pay.property_id === p.id).map((pay, idx) => (
-                                                                <tr key={idx}>
-                                                                    <td>{idx + 1}</td>
-                                                                    <td>₹{pay.amount}</td>
-                                                                    <td>
-                                                                        <span
-                                                                            className="client-badge"
-                                                                            style={{
-                                                                                backgroundColor:
-                                                                                    pay.status?.toLowerCase() === "completed"
-                                                                                        ? "green"
-                                                                                        : pay.status?.toLowerCase() === "pending"
-                                                                                            ? "yellow"
-                                                                                            : pay.status?.toLowerCase() === "rejected"
-                                                                                                ? "red"
-                                                                                                : "gray",
-                                                                                color: pay.status?.toLowerCase() === "pending" ? "black" : "white",
-                                                                                padding: "4px 8px",
-                                                                                borderRadius: "6px",
-                                                                                fontWeight: 500,
-                                                                            }}
-                                                                        >
-                                                                            {pay.status || "completed"}
-                                                                        </span>
-
-                                                                    </td>
-                                                                    <td>{pay.payment_date ? pay.payment_date.slice(0, 10) : "N/A"}</td>
-                                                                    <td>
-                                                                        {
-                                                                            pay.status === "refunded" ? (
-                                                                                <></>
-                                                                            ) : pay.status === "completed" || pay.status === "rejected" ? (
-                                                                                id === admin_id ? (
-                                                                                    <></>
-                                                                                ) : (
-                                                                                    <button
-                                                                                        className="client-add-payment-btn"
-                                                                                        onClick={() => handleUpdatePaymentStatus(pay.id)}
-                                                                                    >
-                                                                                        Delete
-                                                                                    </button>
-                                                                                )
-                                                                            ) : (
-                                                                                id === admin_id ? (
-                                                                                    <button
-                                                                                        className="client-mark-paid-btn"
-                                                                                        onClick={(e) => openMarkPaidForPayment(e, pay)}
-                                                                                    >
-                                                                                        Mark Paid
-                                                                                    </button>
-                                                                                ) : (
-                                                                                    <button
-                                                                                        className="client-add-payment-btn"
-                                                                                        onClick={(e) => handleEditPayment(e, pay)}
-                                                                                    >
-                                                                                        Edit
-                                                                                    </button>
-                                                                                )
-                                                                            )
-                                                                        }
-
-                                                                    </td>
-                                                                </tr>
-                                                            ))
-                                                        ) : (
-                                                            <tr><td colSpan={5} style={{ textAlign: "center", opacity: 0.6 }}>No payments for this property</td></tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
+                                    <div className="client-property-header">
+                                        <span className="client-property-name">{p.title}</span>
+                                        <span className="client-property-date">{p.createdAt}</span>
                                     </div>
-                                );
-                            }) : <p>No Properties Available</p>}
+
+                                    <p className="client-sale-price">₹{p.price}</p>
+                                    <div className="client-sale-plan">
+                                        <p className="client-sale-note">{p.description}</p>
+                                        {openProperty === p.id ? <FaChevronUp /> : <FaChevronDown />}
+                                    </div>
+
+                                    {openProperty === p.id && (
+                                        <div className="client-transaction-box">
+                                            <div className="client-transaction-header">
+                                                <h5>Transaction History</h5>
+                                                <button className="client-add-payment-btn" onClick={(e) => { e.stopPropagation(); handleOpenAddPayment(p); }}>
+                                                    Add Payment
+                                                </button>
+                                            </div>
+
+                                            <table className="client-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>S.No</th>
+                                                        <th>Amount</th>
+                                                        <th>Status</th>
+                                                        <th>Payment Date</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {clientPayments.filter(pay => pay.property_id === p.id).length > 0 ? (
+                                                        clientPayments.filter(pay => pay.property_id === p.id).map((pay, idx) => (
+                                                            <tr key={idx} onClick={() => fetchConfirmationByPaymentId(pay.id)}>
+                                                                <td>{idx + 1}</td>
+                                                                <td>₹{pay.amount}</td>
+                                                                <td>
+                                                                    <span
+                                                                        className="client-badge"
+                                                                        style={{
+                                                                            backgroundColor:
+                                                                                pay.status?.toLowerCase() === "completed"
+                                                                                    ? "green"
+                                                                                    : pay.status?.toLowerCase() === "pending"
+                                                                                        ? "yellow"
+                                                                                        : pay.status?.toLowerCase() === "rejected"
+                                                                                            ? "red"
+                                                                                            : "gray",
+                                                                            color: pay.status?.toLowerCase() === "pending" ? "black" : "white",
+                                                                            padding: "4px 8px",
+                                                                            borderRadius: "6px",
+                                                                            fontWeight: 500,
+                                                                        }}
+                                                                    >
+                                                                        {pay.status || "completed"}
+                                                                    </span>
+
+                                                                </td>
+                                                                <td>{pay.paid_at ? pay.paid_at.slice(0, 10) : "N/A"}</td>
+                                                                <td>
+                                                                    {/* existing button logic */}
+                                                                    {
+                                                                        pay.status === "refunded" ? (
+                                                                            <></>
+                                                                        ) : pay.status === "completed" || pay.status === "rejected" ? (
+                                                                            id === admin_id ? (
+                                                                                <></>
+                                                                            ) : (
+                                                                                <button
+                                                                                    className="client-add-payment-btn"
+                                                                                    onClick={() => handleUpdatePaymentStatus(pay.id)}
+                                                                                >
+                                                                                    Delete
+                                                                                </button>
+                                                                            )
+                                                                        ) : (
+                                                                            id === admin_id ? (
+                                                                                <button
+                                                                                    className="client-mark-paid-btn"
+                                                                                    onClick={(e) => openMarkPaidForPayment(e, pay)}
+                                                                                >
+                                                                                    Mark Paid
+                                                                                </button>
+                                                                            ) : (
+                                                                                <button
+                                                                                    className="client-add-payment-btn"
+                                                                                    onClick={(e) => handleEditPayment(e, pay)}
+                                                                                >
+                                                                                    Edit
+                                                                                </button>
+                                                                            )
+                                                                        )
+                                                                    }
+
+                                                                    {(() => {
+                                                                        const confirm = confirmationPayments?.[pay.id];
+
+                                                                        return (
+                                                                            <>
+                                                                                {pay.status === "completed" && confirm?.signature && (
+                                                                                    <div style={{ marginTop: "8px" }}>
+                                                                                        <img
+                                                                                            src={`/uploads/${confirm.signature}`}
+                                                                                            alt="signature"
+                                                                                            style={{
+                                                                                                width: "120px",
+                                                                                                height: "auto",
+                                                                                                border: "1px solid #ddd",
+                                                                                                borderRadius: "6px",
+                                                                                                marginTop: "6px",
+                                                                                            }}
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {pay.status === "rejected" && confirm?.reject_reason && (
+                                                                                    <div
+                                                                                        style={{
+                                                                                            marginTop: "8px",
+                                                                                            color: "crimson",
+                                                                                            fontWeight: 600,
+                                                                                            fontSize: "14px",
+                                                                                        }}
+                                                                                    >
+                                                                                        Reason: {confirm.reject_reason}
+                                                                                    </div>
+                                                                                )}
+                                                                            </>
+                                                                        );
+                                                                    })()}
+                                                                </td>
+
+
+                                                                {/* <td>
+                                                                    {
+                                                                        pay.status === "refunded" ? (
+                                                                            <></>
+                                                                        ) : pay.status === "completed" || pay.status === "rejected" ? (
+                                                                            id === admin_id ? (
+                                                                                <></>
+                                                                            ) : (
+                                                                                <button
+                                                                                    className="client-add-payment-btn"
+                                                                                    onClick={() => handleUpdatePaymentStatus(pay.id)}
+                                                                                >
+                                                                                    Delete
+                                                                                </button>
+                                                                            )
+                                                                        ) : (
+                                                                            id === admin_id ? (
+                                                                                <button
+                                                                                    className="client-mark-paid-btn"
+                                                                                    onClick={(e) => openMarkPaidForPayment(e, pay)}
+                                                                                >
+                                                                                    Mark Paid
+                                                                                </button>
+                                                                            ) : (
+                                                                                <button
+                                                                                    className="client-add-payment-btn"
+                                                                                    onClick={(e) => handleEditPayment(e, pay)}
+                                                                                >
+                                                                                    Edit
+                                                                                </button>
+                                                                            )
+                                                                        )
+                                                                    }
+
+
+
+                                                                </td> */}
+                                                            </tr>
+                                                        ))
+                                                    ) : (
+                                                        <tr><td colSpan={5} style={{ textAlign: "center", opacity: 0.6 }}>No payments for this property</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            )) : <p>No Properties Available</p>}
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* ===================== SALE MODAL (unchanged) ===================== */}
-            {showSaleModal && (
-                <div className="payment-modal-overlay">
-                    <div className="payment-modal better-modal mark-paid-modal">
-                        <div className="payment-modal-header">
-                            <h3>Record a New Sale</h3>
-                            <button className="payment-close-btn" onClick={() => setShowSaleModal(false)}>✕</button>
-                        </div>
+            {
+                showSaleModal && (
+                    <div className="payment-modal-overlay">
+                        <div className="payment-modal better-modal mark-paid-modal">
+                            <div className="payment-modal-header">
+                                <h3>Record a New Sale</h3>
+                                <button className="payment-close-btn" onClick={() => setShowSaleModal(false)}>✕</button>
+                            </div>
 
-                        {assignedError && <div style={{ color: "crimson", marginBottom: 10 }}>{assignedError}</div>}
+                            {assignedError && <div style={{ color: "crimson", marginBottom: 10 }}>{assignedError}</div>}
 
-                        <select name="property_id" value={assignedForm.property_id} onChange={handleAssignProperty}>
-                            <option value="">-- select property --</option>
-                            {properties.map((p) => <option key={p.id} value={p.id}>{p.title} — ₹{p.price}</option>)}
-                        </select>
+                            <select name="property_id" value={assignedForm.property_id} onChange={handleAssignProperty}>
+                                <option value="">-- select property --</option>
+                                {properties.map((p) => <option key={p.id} value={p.id}>{p.title} — ₹{p.price}</option>)}
+                            </select>
 
-                        <input className="payment-input" name="amount" value={assignedForm.amount} onChange={handleAssignProperty} placeholder="Amount" />
+                            <input className="payment-input" name="amount" value={assignedForm.amount} onChange={handleAssignProperty} placeholder="Amount" />
 
-                        <input className="payment-input" type="datetime-local" name="assigned_at" value={assignedForm.assigned_at} onChange={handleAssignProperty} />
+                            <input className="payment-input" type="datetime-local" name="assigned_at" value={assignedForm.assigned_at} onChange={handleAssignProperty} />
 
-                        <textarea className="payment-textarea" name="details" value={assignedForm.details} onChange={handleAssignProperty} placeholder="Details" />
+                            <textarea className="payment-textarea" name="details" value={assignedForm.details} onChange={handleAssignProperty} placeholder="Details" />
 
-                        <div className="payment-modal-actions">
-                            <button className="payment-cancel" onClick={() => setShowSaleModal(false)}>Cancel</button>
-                            <button className="payment-save" onClick={handleAssignPropertySubmit}>Save Sale</button>
+                            <div className="payment-modal-actions">
+                                <button className="payment-cancel" onClick={() => setShowSaleModal(false)}>Cancel</button>
+                                <button className="payment-save" onClick={handleAssignPropertySubmit}>Save Sale</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ===================== PAYMENT MODAL (unchanged) ===================== */}
-            {showPaymentModal && (
-                <div className="payment-modal-overlay">
-                    <div className="payment-modal better-modal mark-paid-modal">
-                        <div className="payment-modal-header">
-                            <h3>{isEditing ? "Edit Payment" : "Record a New Payment"}</h3>
-                            <button className="payment-close-btn" onClick={closePaymentModal}>✕</button>
-                        </div>
+            {
+                showPaymentModal && (
+                    <div className="payment-modal-overlay">
+                        <div className="payment-modal better-modal mark-paid-modal">
+                            <div className="payment-modal-header">
+                                <h3>{isEditing ? "Edit Payment" : "Record a New Payment"}</h3>
+                                <button className="payment-close-btn" onClick={closePaymentModal}>✕</button>
+                            </div>
 
-                        {paymenterror && <p style={{ color: "crimson", fontWeight: 500 }}>{paymenterror}</p>}
+                            {paymenterror && <p style={{ color: "crimson", fontWeight: 500 }}>{paymenterror}</p>}
 
-                        <label>Client</label>
-                        <input className="payment-input" value={clientInfo.name || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
+                            <label>Client</label>
+                            <input className="payment-input" value={clientInfo.name || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
 
-                        <label>Property</label>
-                        <input className="payment-input" value={selectedProperty?.title || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
+                            <label>Property</label>
+                            <input className="payment-input" value={selectedProperty?.title || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
 
-                        <label>Amount</label>
-                        <input className="payment-input" type="number" name="amount" value={paymentForm.amount} onChange={handlePayment} placeholder="Enter amount" />
+                            <label>Amount</label>
+                            <input className="payment-input" type="number" name="amount" value={paymentForm.amount} onChange={handlePayment} placeholder="Enter amount" />
 
-                        <label>Payment Method</label>
-                        <select className="payment-input" name="payment_method" value={paymentForm.payment_method} onChange={handlePayment}>
-                            <option value="">-- select --</option>
-                            <option value="cash">Cash</option>
-                            <option value="upi">UPI</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="cheque">Cheque</option>
-                            <option value="card">Card</option>
-                        </select>
+                            <label>Payment Method</label>
+                            <select className="payment-input" name="payment_method" value={paymentForm.payment_method} onChange={handlePayment}>
+                                <option value="">-- select --</option>
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="card">Card</option>
+                            </select>
 
-                        <label>Payment Date</label>
-                        <input className="payment-input" type="datetime-local" name="paid_at" value={paymentForm.paid_at} onChange={handlePayment} />
+                            <label>Payment Date</label>
+                            <input className="payment-input" type="datetime-local" name="paid_at" value={paymentForm.paid_at} onChange={handlePayment} />
 
-                        <textarea className="payment-textarea" name="details" value={paymentForm.details} onChange={handlePayment} placeholder="Description (Optional)" />
+                            <textarea className="payment-textarea" name="details" value={paymentForm.details} onChange={handlePayment} placeholder="Description (Optional)" />
 
-                        <div className="payment-modal-actions">
-                            <button className="payment-cancel" onClick={closePaymentModal}>Cancel</button>
-                            <button className="payment-save" onClick={isEditing ? handleUpdatePayment : handleAddPayment}>
-                                {isEditing ? "Update Payment" : "Save Payment"}
-                            </button>
+                            <div className="payment-modal-actions">
+                                <button className="payment-cancel" onClick={closePaymentModal}>Cancel</button>
+                                <button className="payment-save" onClick={isEditing ? handleUpdatePayment : handleAddPayment}>
+                                    {isEditing ? "Update Payment" : "Save Payment"}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ===================== MARK PAID / REJECT MODAL (wired up) ===================== */}
-            {showMarkPaidModal && (
-                <div className="payment-modal-overlay">
-                    <div className="payment-modal better-modal mark-paid-modal">
-                        <div className="payment-modal-header">
-                            <h3>{showRejectComment ? "Reject Payment" : "Confirm Payment"}</h3>
-                            <button className="payment-close-btn" onClick={() => { setShowRejectComment(false); setShowMarkPaidModal(false); }}>
-                                ✕
-                            </button>
+            {
+                showMarkPaidModal && (
+                    <div className="payment-modal-overlay">
+                        <div className="payment-modal better-modal mark-paid-modal">
+                            <div className="payment-modal-header">
+                                <h3>{showRejectComment ? "Reject Payment" : "Confirm Payment"}</h3>
+                                <button className="payment-close-btn" onClick={() => { setShowRejectComment(false); setShowMarkPaidModal(false); }}>
+                                    ✕
+                                </button>
+                            </div>
+
+                            {/* show any errors */}
+                            {markError && <div style={{ color: "crimson", marginBottom: 8 }}>{markError}</div>}
+
+                            {!showRejectComment ? (
+                                <>
+                                    <label>Confirm Date & Time</label>
+                                    <input
+                                        className="payment-input"
+                                        type="datetime-local"
+                                        value={markConfirmedAt}
+                                        onChange={(e) => setMarkConfirmedAt(e.target.value)}
+                                    />
+
+                                    <label>Client</label>
+                                    <input className="payment-input" type="text" value={clientInfo.name || ""} readOnly />
+
+                                    <label>Property</label>
+                                    <input className="payment-input" type="text" value={selectedProperty?.title || ""} readOnly />
+
+                                    <label>Amount</label>
+                                    <input className="payment-input" type="text" value={`₹${selectedPayment?.amount || ""}`} readOnly />
+
+                                    <label>Signature</label>
+                                    <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
+                                    <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
+
+                                    <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                                        <button className="payment-cancel reject-btn" onClick={() => setShowRejectComment(true)}>Reject</button>
+                                        <button className="payment-save" onClick={handleConfirmAndMarkPaid}>Confirm & Mark Paid</button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <label>Rejection Reason</label>
+                                    <textarea
+                                        className="payment-textarea"
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        placeholder="Why are you rejecting this payment?"
+                                    />
+
+                                    {/* <label>Optional Signature (sign to confirm rejection)</label>
+                                    <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
+                                    <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button> */}
+
+                                    <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                                        <button className="payment-cancel" onClick={() => setShowRejectComment(false)}>Back</button>
+                                        <button className="payment-save reject-submit-btn" onClick={handleSubmitRejection}>Submit Rejection</button>
+                                    </div>
+                                </>
+                            )}
                         </div>
-
-                        {/* show any errors */}
-                        {markError && <div style={{ color: "crimson", marginBottom: 8 }}>{markError}</div>}
-
-                        {!showRejectComment ? (
-                            <>
-                                <label>Confirm Date & Time</label>
-                                <input
-                                    className="payment-input"
-                                    type="datetime-local"
-                                    value={markConfirmedAt}
-                                    onChange={(e) => setMarkConfirmedAt(e.target.value)}
-                                />
-
-                                <label>Client</label>
-                                <input className="payment-input" type="text" value={clientInfo.name || ""} readOnly />
-
-                                <label>Property</label>
-                                <input className="payment-input" type="text" value={selectedProperty?.title || ""} readOnly />
-
-                                <label>Amount</label>
-                                <input className="payment-input" type="text" value={`₹${selectedPayment?.amount || ""}`} readOnly />
-
-                                <label>Signature</label>
-                                <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
-                                <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
-
-                                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                                    <button className="payment-cancel reject-btn" onClick={() => setShowRejectComment(true)}>Reject</button>
-                                    <button className="payment-save" onClick={handleConfirmAndMarkPaid}>Confirm & Mark Paid</button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <label>Rejection Reason</label>
-                                <textarea
-                                    className="payment-textarea"
-                                    value={rejectReason}
-                                    onChange={(e) => setRejectReason(e.target.value)}
-                                    placeholder="Why are you rejecting this payment?"
-                                />
-
-                                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                                    <button className="payment-cancel" onClick={() => setShowRejectComment(false)}>Back</button>
-                                    <button className="payment-save reject-submit-btn" onClick={handleSubmitRejection}>Submit Rejection</button>
-                                </div>
-                            </>
-                        )}
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }
