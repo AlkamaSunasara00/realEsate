@@ -3,14 +3,7 @@ const connection = require("../../connection/connection");
 // Get all confirmations (most recent first)
 const getAllConfirmations = (req, res) => {
   const sql = `
-    SELECT
-      payment_confirmations.*,
-      sender.name AS sender_name,
-      confirmer.name AS confirmer_name
-    FROM payment_confirmations
-    LEFT JOIN admin AS sender ON payment_confirmations.sent_by = sender.id
-    LEFT JOIN admin AS confirmer ON payment_confirmations.confirmed_by = confirmer.id
-    ORDER BY payment_confirmations.id DESC
+    SELECT * FROM payment_confirmations
   `;
 
   connection.query(sql, (err, rows) => {
@@ -26,15 +19,8 @@ const getAllConfirmations = (req, res) => {
 const getConfirmationById = (req, res) => {
   const id = req.params.id;
   const sql = `
-    SELECT
-      payment_confirmations.*,
-      sender.name AS sender_name,
-      confirmer.name AS confirmer_name
-    FROM payment_confirmations
-    LEFT JOIN admin AS sender ON payment_confirmations.sent_by = sender.id
-    LEFT JOIN admin AS confirmer ON payment_confirmations.confirmed_by = confirmer.id
-    WHERE payment_confirmations.id = ?
-    LIMIT 1
+   SELECT * FROM payment_confirmations WHERE id = ? ;
+
   `;
   connection.query(sql, [id], (err, rows) => {
     if (err) {
@@ -150,10 +136,23 @@ const deleteConfirmation = (req, res) => {
   });
 };
 
+const getConfirmationByPaymentId = (req, res) => {
+  const { payment_id } = req.params;
+  const query="SELECT * FROM payment_confirmations WHERE payment_id= ?"
+  connection.query(query,[payment_id],(err,result)=>{
+    if (err) {
+      return res.status(500);
+    } else {
+      return res.json(result)
+    }
+  })
+}
+
 module.exports = {
   getAllConfirmations,
   getConfirmationById,
   createConfirmation,
   updateConfirmation,
   deleteConfirmation,
+  getConfirmationByPaymentId
 };

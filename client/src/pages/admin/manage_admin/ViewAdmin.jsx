@@ -14,6 +14,7 @@ function ViewAdmin() {
     const user_role = user.role
     const navigate = useNavigate();
 
+
     const [openProperty, setOpenProperty] = useState(null);
 
     // modals
@@ -60,6 +61,8 @@ function ViewAdmin() {
     const [markConfirmedAt, setMarkConfirmedAt] = useState(""); // datetime-local string
     const [rejectReason, setRejectReason] = useState("");
     const [markError, setMarkError] = useState("");
+    const [confirmationPayments, setConfirmationPayments] = useState({});
+
 
 
     const sigCanvas = useRef(null);
@@ -444,6 +447,21 @@ function ViewAdmin() {
         }
     }
 
+    const fetchConfirmationByPaymentId = async (paymentId) => {
+        try {
+            const res = await api.get(`${API_ROOT}/getConfirmationByPaymentId/${paymentId}`);
+            const data = res.data[0];
+
+            setConfirmationPayments(prev => ({
+                ...prev,
+                [paymentId]: data
+            }));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
     return (
         <>
             <div className="client-section">
@@ -460,7 +478,7 @@ function ViewAdmin() {
                                 <button className="client-add-sale-btn" onClick={() => setShowSaleModal(true)}>
                                     Add Sale
                                 </button>
-                            ):(
+                            ) : (
                                 <></>
                             )}
 
@@ -497,7 +515,19 @@ function ViewAdmin() {
                         <div className="client-sale-box">
                             <h4 className="client-box-title">Sales & Payments</h4>
                             {propertiesDetail.length > 0 ? propertiesDetail.map((p, i) => (
-                                <div className="client-property-sale" onClick={() => toggleProperty(p.id)} key={i}>
+                                <div
+                                    className="client-property-sale"
+                                    onClick={() => {
+                                        toggleProperty(p.id);
+
+                                        // fetch confirmations for all payments of this property
+                                        clientPayments
+                                            .filter(pay => pay.property_id === p.id)
+                                            .forEach(pay => fetchConfirmationByPaymentId(pay.id));
+                                    }}
+                                    key={i}
+                                >
+
                                     <div className="client-property-header">
                                         <span className="client-property-name">{p.title}</span>
                                         <span className="client-property-date">{p.createdAt}</span>
@@ -531,7 +561,7 @@ function ViewAdmin() {
                                                 <tbody>
                                                     {clientPayments.filter(pay => pay.property_id === p.id).length > 0 ? (
                                                         clientPayments.filter(pay => pay.property_id === p.id).map((pay, idx) => (
-                                                            <tr key={idx}>
+                                                            <tr key={idx} onClick={() => fetchConfirmationByPaymentId(pay.id)}>
                                                                 <td>{idx + 1}</td>
                                                                 <td>₹{pay.amount}</td>
                                                                 <td>
@@ -556,8 +586,82 @@ function ViewAdmin() {
                                                                     </span>
 
                                                                 </td>
-                                                                <td>{pay.payment_date ? pay.payment_date.slice(0, 10) : "N/A"}</td>
+                                                                <td>{pay.paid_at ? pay.paid_at.slice(0, 10) : "N/A"}</td>
                                                                 <td>
+                                                                    {/* existing button logic */}
+                                                                    {
+                                                                        pay.status === "refunded" ? (
+                                                                            <></>
+                                                                        ) : pay.status === "completed" || pay.status === "rejected" ? (
+                                                                            id === admin_id ? (
+                                                                                <></>
+                                                                            ) : (
+                                                                                <button
+                                                                                    className="client-add-payment-btn"
+                                                                                    onClick={() => handleUpdatePaymentStatus(pay.id)}
+                                                                                >
+                                                                                    Delete
+                                                                                </button>
+                                                                            )
+                                                                        ) : (
+                                                                            id === admin_id ? (
+                                                                                <button
+                                                                                    className="client-mark-paid-btn"
+                                                                                    onClick={(e) => openMarkPaidForPayment(e, pay)}
+                                                                                >
+                                                                                    Mark Paid
+                                                                                </button>
+                                                                            ) : (
+                                                                                <button
+                                                                                    className="client-add-payment-btn"
+                                                                                    onClick={(e) => handleEditPayment(e, pay)}
+                                                                                >
+                                                                                    Edit
+                                                                                </button>
+                                                                            )
+                                                                        )
+                                                                    }
+
+                                                                    {(() => {
+                                                                        const confirm = confirmationPayments?.[pay.id];
+
+                                                                        return (
+                                                                            <>
+                                                                                {pay.status === "completed" && confirm?.signature && (
+                                                                                    <div style={{ marginTop: "8px" }}>
+                                                                                        <img
+                                                                                            src={`/uploads/${confirm.signature}`}
+                                                                                            alt="signature"
+                                                                                            style={{
+                                                                                                width: "120px",
+                                                                                                height: "auto",
+                                                                                                border: "1px solid #ddd",
+                                                                                                borderRadius: "6px",
+                                                                                                marginTop: "6px",
+                                                                                            }}
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {pay.status === "rejected" && confirm?.reject_reason && (
+                                                                                    <div
+                                                                                        style={{
+                                                                                            marginTop: "8px",
+                                                                                            color: "crimson",
+                                                                                            fontWeight: 600,
+                                                                                            fontSize: "14px",
+                                                                                        }}
+                                                                                    >
+                                                                                        Reason: {confirm.reject_reason}
+                                                                                    </div>
+                                                                                )}
+                                                                            </>
+                                                                        );
+                                                                    })()}
+                                                                </td>
+
+
+                                                                {/* <td>
                                                                     {
                                                                         pay.status === "refunded" ? (
                                                                             <></>
@@ -593,7 +697,7 @@ function ViewAdmin() {
 
 
 
-                                                                </td>
+                                                                </td> */}
                                                             </tr>
                                                         ))
                                                     ) : (
@@ -608,148 +712,154 @@ function ViewAdmin() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* ===================== SALE MODAL (unchanged) ===================== */}
-            {showSaleModal && (
-                <div className="payment-modal-overlay">
-                    <div className="payment-modal better-modal mark-paid-modal">
-                        <div className="payment-modal-header">
-                            <h3>Record a New Sale</h3>
-                            <button className="payment-close-btn" onClick={() => setShowSaleModal(false)}>✕</button>
-                        </div>
+            {
+                showSaleModal && (
+                    <div className="payment-modal-overlay">
+                        <div className="payment-modal better-modal mark-paid-modal">
+                            <div className="payment-modal-header">
+                                <h3>Record a New Sale</h3>
+                                <button className="payment-close-btn" onClick={() => setShowSaleModal(false)}>✕</button>
+                            </div>
 
-                        {assignedError && <div style={{ color: "crimson", marginBottom: 10 }}>{assignedError}</div>}
+                            {assignedError && <div style={{ color: "crimson", marginBottom: 10 }}>{assignedError}</div>}
 
-                        <select name="property_id" value={assignedForm.property_id} onChange={handleAssignProperty}>
-                            <option value="">-- select property --</option>
-                            {properties.map((p) => <option key={p.id} value={p.id}>{p.title} — ₹{p.price}</option>)}
-                        </select>
+                            <select name="property_id" value={assignedForm.property_id} onChange={handleAssignProperty}>
+                                <option value="">-- select property --</option>
+                                {properties.map((p) => <option key={p.id} value={p.id}>{p.title} — ₹{p.price}</option>)}
+                            </select>
 
-                        <input className="payment-input" name="amount" value={assignedForm.amount} onChange={handleAssignProperty} placeholder="Amount" />
+                            <input className="payment-input" name="amount" value={assignedForm.amount} onChange={handleAssignProperty} placeholder="Amount" />
 
-                        <input className="payment-input" type="datetime-local" name="assigned_at" value={assignedForm.assigned_at} onChange={handleAssignProperty} />
+                            <input className="payment-input" type="datetime-local" name="assigned_at" value={assignedForm.assigned_at} onChange={handleAssignProperty} />
 
-                        <textarea className="payment-textarea" name="details" value={assignedForm.details} onChange={handleAssignProperty} placeholder="Details" />
+                            <textarea className="payment-textarea" name="details" value={assignedForm.details} onChange={handleAssignProperty} placeholder="Details" />
 
-                        <div className="payment-modal-actions">
-                            <button className="payment-cancel" onClick={() => setShowSaleModal(false)}>Cancel</button>
-                            <button className="payment-save" onClick={handleAssignPropertySubmit}>Save Sale</button>
+                            <div className="payment-modal-actions">
+                                <button className="payment-cancel" onClick={() => setShowSaleModal(false)}>Cancel</button>
+                                <button className="payment-save" onClick={handleAssignPropertySubmit}>Save Sale</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ===================== PAYMENT MODAL (unchanged) ===================== */}
-            {showPaymentModal && (
-                <div className="payment-modal-overlay">
-                    <div className="payment-modal better-modal mark-paid-modal">
-                        <div className="payment-modal-header">
-                            <h3>{isEditing ? "Edit Payment" : "Record a New Payment"}</h3>
-                            <button className="payment-close-btn" onClick={closePaymentModal}>✕</button>
-                        </div>
+            {
+                showPaymentModal && (
+                    <div className="payment-modal-overlay">
+                        <div className="payment-modal better-modal mark-paid-modal">
+                            <div className="payment-modal-header">
+                                <h3>{isEditing ? "Edit Payment" : "Record a New Payment"}</h3>
+                                <button className="payment-close-btn" onClick={closePaymentModal}>✕</button>
+                            </div>
 
-                        {paymenterror && <p style={{ color: "crimson", fontWeight: 500 }}>{paymenterror}</p>}
+                            {paymenterror && <p style={{ color: "crimson", fontWeight: 500 }}>{paymenterror}</p>}
 
-                        <label>Client</label>
-                        <input className="payment-input" value={clientInfo.name || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
+                            <label>Client</label>
+                            <input className="payment-input" value={clientInfo.name || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
 
-                        <label>Property</label>
-                        <input className="payment-input" value={selectedProperty?.title || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
+                            <label>Property</label>
+                            <input className="payment-input" value={selectedProperty?.title || ""} readOnly style={{ backgroundColor: "#f5f5f5" }} />
 
-                        <label>Amount</label>
-                        <input className="payment-input" type="number" name="amount" value={paymentForm.amount} onChange={handlePayment} placeholder="Enter amount" />
+                            <label>Amount</label>
+                            <input className="payment-input" type="number" name="amount" value={paymentForm.amount} onChange={handlePayment} placeholder="Enter amount" />
 
-                        <label>Payment Method</label>
-                        <select className="payment-input" name="payment_method" value={paymentForm.payment_method} onChange={handlePayment}>
-                            <option value="">-- select --</option>
-                            <option value="cash">Cash</option>
-                            <option value="upi">UPI</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="cheque">Cheque</option>
-                            <option value="card">Card</option>
-                        </select>
+                            <label>Payment Method</label>
+                            <select className="payment-input" name="payment_method" value={paymentForm.payment_method} onChange={handlePayment}>
+                                <option value="">-- select --</option>
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="card">Card</option>
+                            </select>
 
-                        <label>Payment Date</label>
-                        <input className="payment-input" type="datetime-local" name="paid_at" value={paymentForm.paid_at} onChange={handlePayment} />
+                            <label>Payment Date</label>
+                            <input className="payment-input" type="datetime-local" name="paid_at" value={paymentForm.paid_at} onChange={handlePayment} />
 
-                        <textarea className="payment-textarea" name="details" value={paymentForm.details} onChange={handlePayment} placeholder="Description (Optional)" />
+                            <textarea className="payment-textarea" name="details" value={paymentForm.details} onChange={handlePayment} placeholder="Description (Optional)" />
 
-                        <div className="payment-modal-actions">
-                            <button className="payment-cancel" onClick={closePaymentModal}>Cancel</button>
-                            <button className="payment-save" onClick={isEditing ? handleUpdatePayment : handleAddPayment}>
-                                {isEditing ? "Update Payment" : "Save Payment"}
-                            </button>
+                            <div className="payment-modal-actions">
+                                <button className="payment-cancel" onClick={closePaymentModal}>Cancel</button>
+                                <button className="payment-save" onClick={isEditing ? handleUpdatePayment : handleAddPayment}>
+                                    {isEditing ? "Update Payment" : "Save Payment"}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ===================== MARK PAID / REJECT MODAL (wired up) ===================== */}
-            {showMarkPaidModal && (
-                <div className="payment-modal-overlay">
-                    <div className="payment-modal better-modal mark-paid-modal">
-                        <div className="payment-modal-header">
-                            <h3>{showRejectComment ? "Reject Payment" : "Confirm Payment"}</h3>
-                            <button className="payment-close-btn" onClick={() => { setShowRejectComment(false); setShowMarkPaidModal(false); }}>
-                                ✕
-                            </button>
+            {
+                showMarkPaidModal && (
+                    <div className="payment-modal-overlay">
+                        <div className="payment-modal better-modal mark-paid-modal">
+                            <div className="payment-modal-header">
+                                <h3>{showRejectComment ? "Reject Payment" : "Confirm Payment"}</h3>
+                                <button className="payment-close-btn" onClick={() => { setShowRejectComment(false); setShowMarkPaidModal(false); }}>
+                                    ✕
+                                </button>
+                            </div>
+
+                            {/* show any errors */}
+                            {markError && <div style={{ color: "crimson", marginBottom: 8 }}>{markError}</div>}
+
+                            {!showRejectComment ? (
+                                <>
+                                    <label>Confirm Date & Time</label>
+                                    <input
+                                        className="payment-input"
+                                        type="datetime-local"
+                                        value={markConfirmedAt}
+                                        onChange={(e) => setMarkConfirmedAt(e.target.value)}
+                                    />
+
+                                    <label>Client</label>
+                                    <input className="payment-input" type="text" value={clientInfo.name || ""} readOnly />
+
+                                    <label>Property</label>
+                                    <input className="payment-input" type="text" value={selectedProperty?.title || ""} readOnly />
+
+                                    <label>Amount</label>
+                                    <input className="payment-input" type="text" value={`₹${selectedPayment?.amount || ""}`} readOnly />
+
+                                    <label>Signature</label>
+                                    <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
+                                    <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
+
+                                    <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                                        <button className="payment-cancel reject-btn" onClick={() => setShowRejectComment(true)}>Reject</button>
+                                        <button className="payment-save" onClick={handleConfirmAndMarkPaid}>Confirm & Mark Paid</button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <label>Rejection Reason</label>
+                                    <textarea
+                                        className="payment-textarea"
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        placeholder="Why are you rejecting this payment?"
+                                    />
+
+                                    <label>Optional Signature (sign to confirm rejection)</label>
+                                    <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
+                                    <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
+
+                                    <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                                        <button className="payment-cancel" onClick={() => setShowRejectComment(false)}>Back</button>
+                                        <button className="payment-save reject-submit-btn" onClick={handleSubmitRejection}>Submit Rejection</button>
+                                    </div>
+                                </>
+                            )}
                         </div>
-
-                        {/* show any errors */}
-                        {markError && <div style={{ color: "crimson", marginBottom: 8 }}>{markError}</div>}
-
-                        {!showRejectComment ? (
-                            <>
-                                <label>Confirm Date & Time</label>
-                                <input
-                                    className="payment-input"
-                                    type="datetime-local"
-                                    value={markConfirmedAt}
-                                    onChange={(e) => setMarkConfirmedAt(e.target.value)}
-                                />
-
-                                <label>Client</label>
-                                <input className="payment-input" type="text" value={clientInfo.name || ""} readOnly />
-
-                                <label>Property</label>
-                                <input className="payment-input" type="text" value={selectedProperty?.title || ""} readOnly />
-
-                                <label>Amount</label>
-                                <input className="payment-input" type="text" value={`₹${selectedPayment?.amount || ""}`} readOnly />
-
-                                <label>Signature</label>
-                                <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
-                                <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
-
-                                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                                    <button className="payment-cancel reject-btn" onClick={() => setShowRejectComment(true)}>Reject</button>
-                                    <button className="payment-save" onClick={handleConfirmAndMarkPaid}>Confirm & Mark Paid</button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <label>Rejection Reason</label>
-                                <textarea
-                                    className="payment-textarea"
-                                    value={rejectReason}
-                                    onChange={(e) => setRejectReason(e.target.value)}
-                                    placeholder="Why are you rejecting this payment?"
-                                />
-
-                                <label>Optional Signature (sign to confirm rejection)</label>
-                                <SignaturePad ref={sigCanvas} penColor="black" canvasProps={{ className: "signature-pad" }} />
-                                <button className="signature-clear-btn" onClick={() => sigCanvas.current.clear()}>Clear</button>
-
-                                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                                    <button className="payment-cancel" onClick={() => setShowRejectComment(false)}>Back</button>
-                                    <button className="payment-save reject-submit-btn" onClick={handleSubmitRejection}>Submit Rejection</button>
-                                </div>
-                            </>
-                        )}
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }

@@ -32,7 +32,7 @@ const EditAdmin = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get(`/admin/getagencybyid/${id}`);
+        const res = await api.get(`/admin/getUserById/${id}`);
         setForm((p) => ({ ...p, ...(res?.data || {}) }));
       } catch (err) {
         console.error("Error loading admin data:", err);
