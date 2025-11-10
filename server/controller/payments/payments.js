@@ -58,6 +58,7 @@ const addPayment = (req, res) => {
     status = "pending",
     notes = null,
     paid_at = null,
+    created_by
   } = req.body;
 
   // basic validation
@@ -67,8 +68,8 @@ const addPayment = (req, res) => {
 
   // allow client_id to be null (in case you want anonymous payment) — but screenshot shows client_id nullable
   const q = `INSERT INTO payments
-    (property_id, client_id, amount, payment_method, status, notes, paid_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    (property_id, client_id, amount, payment_method, status, notes, paid_at,created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?,?)`;
 
   const params = [
     property_id,
@@ -78,6 +79,7 @@ const addPayment = (req, res) => {
     status,
     notes,
     paid_at || null,
+    created_by
   ];
 
   connection.query(q, params, (err, result) => {

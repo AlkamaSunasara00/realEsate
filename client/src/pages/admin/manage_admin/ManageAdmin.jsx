@@ -91,7 +91,7 @@ const ManageAdmin = () => {
         <Breadcrumb
           title="Clients"
           breadcrumbText="Clients List"
-          button={{ link: "/admin/add-new_admin", text: "Add New Admin" }}
+          button={{ link: "/admin/add-new_admin", text: "Add New Client" }}
           isMobile={isMobile}
           isTablet={isTablet}
         />
@@ -135,8 +135,8 @@ const ManageAdmin = () => {
                       <td className="admin-added">{a.createdat?.slice(0, 10)}</td>
                       <td className="actions admin-actions">
                         <FaRegEye onClick={() => navigate(`/admin/view-admin/${a.id}`)} />
-                        <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" title="Edit admin" />
-                        <MdDeleteForever onClick={() => handleDelete(a.id)} className="delete-btn" title="Delete admin" />
+                        <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" title="Edit Client" />
+                        <MdDeleteForever onClick={() => handleDelete(a.id)} className="delete-btn" title="Delete Client" />
                       </td>
                     </tr>
                   ))
