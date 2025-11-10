@@ -9,8 +9,9 @@ import { useNavigate, useParams } from "react-router-dom";
 
 function ViewAdmin() {
     const { id } = useParams(); // client id
-    console.log(id)
     const admin_id = localStorage.getItem("admin_id")
+    const user = JSON.parse(localStorage.getItem("user"))
+    const user_role = user.role
     const navigate = useNavigate();
 
     const [openProperty, setOpenProperty] = useState(null);
@@ -455,9 +456,14 @@ function ViewAdmin() {
                         </div>
 
                         <div className="header-top-right">
-                            <button className="client-add-sale-btn" onClick={() => setShowSaleModal(true)}>
-                                Add Sale
-                            </button>
+                            {user_role === "admin" ? (
+                                <button className="client-add-sale-btn" onClick={() => setShowSaleModal(true)}>
+                                    Add Sale
+                                </button>
+                            ):(
+                                <></>
+                            )}
+
                         </div>
                     </div>
 
