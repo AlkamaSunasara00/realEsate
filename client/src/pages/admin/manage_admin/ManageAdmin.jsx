@@ -72,7 +72,7 @@ const ManageAdmin = () => {
 
   return (
     <>
-      <Sidebar
+      {/* <Sidebar
         admin={currentAdmin}
         onLogout={() => { console.log("Logging out..."); }}
         isMobile={isMobile}
@@ -85,7 +85,7 @@ const ManageAdmin = () => {
         isMobile={isMobile}
         isTablet={isTablet}
         toggleSidebar={toggleSidebar}
-      />
+      /> */}
 
       <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""} ${isSidebarOpen ? "sidebar-open" : ""}`}>
         <Breadcrumb

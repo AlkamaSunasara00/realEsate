@@ -11,7 +11,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 1000;
+  z-index: 3010; 
   transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.08);
 }
@@ -204,10 +204,11 @@
 .sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 999;
-  animation: fadeIn 0.3s ease;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 3000;                 /* <- raised so overlay wins */
+  pointer-events: auto;          /* ensure overlay blocks clicks */
+  animation: fadeIn 0.18s ease;
 }
 @keyframes fadeIn {
   from { opacity: 0; }

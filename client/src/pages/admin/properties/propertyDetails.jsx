@@ -102,8 +102,6 @@ const PropertyDetails = () => {
 
   return (
     <>
-      <Sidebar isMobile={isMobile} isTablet={isTablet} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <Navbar isMobile={isMobile} isTablet={isTablet} toggleSidebar={toggleSidebar} />
 
       <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
         {/* === HEADER: Back + Actions on Line 1, Title on Line 2 === */}

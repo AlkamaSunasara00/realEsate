@@ -492,7 +492,7 @@ function ViewAdmin() {
                     </div>
 
                     <div className="header-title">
-                        <h2 className="client-title">Client Details</h2>
+                        <h2 className="client-title">Payment Details</h2>
                     </div>
                 </div>
 

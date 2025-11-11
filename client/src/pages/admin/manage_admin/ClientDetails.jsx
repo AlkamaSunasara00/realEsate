@@ -57,15 +57,6 @@ const ClientDetails = () => {
 
   return (
     <>
-      <Sidebar
-        admin={{ name: "Admin" }}
-        onLogout={() => { }}
-        isMobile={isMobile}
-        isTablet={isTablet}
-        isSidebarOpen={isSidebarOpen}
-        toggleSidebar={() => setIsSidebarOpen(v => !v)}
-      />
-      <Navbar admin={{ name: "Admin" }} isMobile={isMobile} isTablet={isTablet} toggleSidebar={() => setIsSidebarOpen(v => !v)} />
 
       <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""} ${isSidebarOpen ? "sidebar-open" : ""}`}>
         {/* Top row: Back (left) + Payment (right) */}

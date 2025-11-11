@@ -11,8 +11,11 @@ import api from "../../../api/axiosInstance";
 const GetProperties = () => {
   const [properties, setProperties] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
+
+  // match ManageAdmin: mobile < 768, tablet >=768 && <1024
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
+
   const navigate = useNavigate();
 
   const fetchProperties = async () => {
@@ -41,8 +44,9 @@ const GetProperties = () => {
 
   useEffect(() => {
     const onResize = () => {
-      const mobile = window.innerWidth <= 768;
-      const tablet = window.innerWidth <= 1024 && window.innerWidth > 768;
+      const width = window.innerWidth;
+      const mobile = width < 768; // strictly less than 768
+      const tablet = width >= 768 && width < 1024; // same as ManageAdmin
       setIsMobile(mobile);
       setIsTablet(tablet);
     };
@@ -85,8 +89,8 @@ const GetProperties = () => {
         isTablet={isTablet}
       />
 
-      {/* Desktop Table */}
-      {!isMobile && (
+      {/* Desktop Table: show ONLY on desktop (not tablet) */}
+      {(!isMobile && !isTablet) && (
         <div className="dashboard-table-container">
           <table>
             <thead>
@@ -146,7 +150,7 @@ const GetProperties = () => {
         </div>
       )}
 
-      {/* Mobile/Tablet Cards */}
+      {/* Tablet & Mobile: show stacked cards */}
       {(isMobile || isTablet) && (
         <div className="cardlist">
           {filtered.length > 0 ? filtered.map(p => (
