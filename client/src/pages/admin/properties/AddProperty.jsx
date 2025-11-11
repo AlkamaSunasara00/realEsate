@@ -4,11 +4,18 @@ import { MdSave } from "react-icons/md";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axiosInstance";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AddProperty = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    title: "", description: "", address: "", price: "", status: "available", image: null
+    title: "",
+    description: "",
+    address: "",
+    price: "",
+    status: "available",
+    image: null,
   });
   const [imgPreview, setImgPreview] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -26,14 +33,14 @@ const AddProperty = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (file) {
       if (imgPreview) URL.revokeObjectURL(imgPreview);
-      setForm(prev => ({ ...prev, image: file }));
+      setForm((prev) => ({ ...prev, image: file }));
       setImgPreview(URL.createObjectURL(file));
     }
   };
@@ -41,27 +48,33 @@ const AddProperty = () => {
   const isValid = () => form.title.trim() && form.price && form.address.trim();
 
   const handleSubmit = async () => {
-    if (!isValid()) return alert("Fill required fields");
+    if (!isValid()) return toast.warn("Please fill all required fields");
+
     setLoading(true);
     const fd = new FormData();
-    Object.keys(form).forEach(key => fd.append(key, form[key]));
+    Object.keys(form).forEach((key) => fd.append(key, form[key]));
 
     try {
       await api.post("http://localhost:4500/addproperty", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("Property added!");
-      navigate("/admin/property");
+      toast.success("Property added successfully!");
+      setTimeout(() => navigate("/admin/property"), 1500);
     } catch (err) {
-      alert("Failed to add");
+      console.error(err);
+      toast.error("Failed to add property");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
-      {/* Header: Back + Save */}
+    <main
+      className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${
+        isTablet ? "tablet-view" : ""
+      }`}
+    >
+      {/* Header */}
       <div className="form-header-top">
         <div className="header-top-left">
           <button className="header-back-btn" onClick={() => navigate(-1)}>
@@ -87,25 +100,54 @@ const AddProperty = () => {
         <div className="form-left">
           <div className="form-card">
             <h6>Property Information</h6>
+
             <div className="form-grid">
               <div className="form-field">
-                <label>Title <span className="required">*</span></label>
-                <input name="title" value={form.title} onChange={handleChange} placeholder="e.g., 3 BHK in Andheri" />
+                <label>
+                  Title <span className="required">*</span>
+                </label>
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder="e.g., 3 BHK in Andheri"
+                />
               </div>
               <div className="form-field">
-                <label>Price (₹) <span className="required">*</span></label>
-                <input type="number" name="price" value={form.price} onChange={handleChange} placeholder="15000000" />
+                <label>
+                  Price (₹) <span className="required">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={form.price}
+                  onChange={handleChange}
+                  placeholder="15000000"
+                />
               </div>
               <div className="form-field">
-                <label>Address <span className="required">*</span></label>
-                <input name="address" value={form.address} onChange={handleChange} placeholder="123, Palm Street, Mumbai" />
+                <label>
+                  Address <span className="required">*</span>
+                </label>
+                <input
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="123, Palm Street, Mumbai"
+                />
               </div>
             </div>
 
             <div className="form-grid">
               <div className="form-field full-width">
                 <label>Description</label>
-                <textarea name="description" value={form.description} onChange={handleChange} rows={5} placeholder="Describe the property..." />
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  rows={5}
+                  placeholder="Describe the property..."
+                />
               </div>
               <div className="form-field">
                 <label>Status</label>
@@ -133,13 +175,22 @@ const AddProperty = () => {
               <div className="no-image-placeholder">No image selected</div>
             )}
             <div className="preview-meta">
-              <div><strong>Title:</strong> {form.title || "—"}</div>
-              <div><strong>Price:</strong> {form.price ? `₹${form.price}` : "—"}</div>
-              <div><strong>Status:</strong> <span className={`status-badge ${form.status}`}>{form.status}</span></div>
+              <div>
+                <strong>Title:</strong> {form.title || "—"}
+              </div>
+              <div>
+                <strong>Price:</strong> {form.price ? `₹${form.price}` : "—"}
+              </div>
+              <div>
+                <strong>Status:</strong>{" "}
+                <span className={`status-badge ${form.status}`}>{form.status}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <ToastContainer position="top-right" autoClose={2500} hideProgressBar theme="colored" />
     </main>
   );
 };

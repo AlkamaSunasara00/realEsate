@@ -4,6 +4,8 @@ import { MdSave } from "react-icons/md";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../../api/axiosInstance";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const UpdateProperty = () => {
   const navigate = useNavigate();
@@ -39,14 +41,14 @@ const UpdateProperty = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return alert("Please upload an image");
-    setForm(prev => ({ ...prev, image: file }));
+    if (!file.type.startsWith("image/")) return toast.warn("Please upload an image");
+    setForm((prev) => ({ ...prev, image: file }));
     if (imgPreview && !initial.image) URL.revokeObjectURL(imgPreview);
     setImgPreview(URL.createObjectURL(file));
   };
@@ -54,7 +56,7 @@ const UpdateProperty = () => {
   const isValid = () => form.id && form.title.trim() && form.price && form.address.trim();
 
   const handleUpdate = async () => {
-    if (!isValid()) return alert("Please fill all required fields");
+    if (!isValid()) return toast.warn("Please fill all required fields");
     setLoading(true);
 
     const fd = new FormData();
@@ -66,10 +68,11 @@ const UpdateProperty = () => {
       await api.put(`/updateproperty/${form.id}`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("Property updated successfully!");
-      navigate("/admin/property");
+      toast.success("Property updated successfully!");
+      setTimeout(() => navigate("/admin/property"), 1500);
     } catch (err) {
-      alert(err?.response?.data?.error || "Failed to update property");
+      console.error(err);
+      toast.error(err?.response?.data?.error || "Failed to update property");
     } finally {
       setLoading(false);
     }
@@ -83,14 +86,18 @@ const UpdateProperty = () => {
           <button className="primary-btn" onClick={() => navigate("/admin/property")}>
             Go Back
           </button>
+          <ToastContainer position="top-right" autoClose={2500} hideProgressBar theme="colored" />
         </div>
       </main>
     );
   }
 
   return (
-    <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
-      {/* Header: Back + Save */}
+    <main
+      className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${
+        isTablet ? "tablet-view" : ""
+      }`}
+    >
       <div className="form-header-top" style={{ marginTop: 4 }}>
         <div className="header-top-left">
           <button className="header-back-btn" onClick={() => navigate(-1)}>
@@ -108,12 +115,10 @@ const UpdateProperty = () => {
         </div>
       </div>
 
-      {/* Title */}
       <div className="form-header-title">
         <h5>Edit Property</h5>
       </div>
 
-      {/* Form Grid */}
       <div className="form-content-grid">
         <div className="form-left">
           <div className="form-card">
@@ -121,19 +126,41 @@ const UpdateProperty = () => {
 
             <div className="form-grid">
               <div className="form-field">
-                <label>Title <span className="required">*</span></label>
-                <input name="title" value={form.title} onChange={handleChange} placeholder="Enter title" />
+                <label>
+                  Title <span className="required">*</span>
+                </label>
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder="Enter title"
+                />
               </div>
               <div className="form-field">
-                <label>Price (₹) <span className="required">*</span></label>
-                <input type="number" name="price" value={form.price} onChange={handleChange} placeholder="Enter price" />
+                <label>
+                  Price (₹) <span className="required">*</span>
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={form.price}
+                  onChange={handleChange}
+                  placeholder="Enter price"
+                />
               </div>
             </div>
 
             <div className="form-grid">
               <div className="form-field full-width">
-                <label>Address <span className="required">*</span></label>
-                <input name="address" value={form.address} onChange={handleChange} placeholder="Full address" />
+                <label>
+                  Address <span className="required">*</span>
+                </label>
+                <input
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Full address"
+                />
               </div>
             </div>
 
@@ -168,7 +195,6 @@ const UpdateProperty = () => {
           </div>
         </div>
 
-        {/* PREVIEW CARD – MOVED TO BOTTOM */}
         <div className="form-right preview-bottom">
           <div className="preview-card">
             <h6>Current Image</h6>
@@ -178,9 +204,15 @@ const UpdateProperty = () => {
               <div className="no-image-placeholder">No image</div>
             )}
             <div className="preview-meta">
-              <div><strong>Title:</strong> {form.title || "—"}</div>
-              <div><strong>Price:</strong> {form.price ? `₹${form.price}` : "—"}</div>
-              <div><strong>Address:</strong> {form.address || "—"}</div>
+              <div>
+                <strong>Title:</strong> {form.title || "—"}
+              </div>
+              <div>
+                <strong>Price:</strong> {form.price ? `₹${form.price}` : "—"}
+              </div>
+              <div>
+                <strong>Address:</strong> {form.address || "—"}
+              </div>
               <div>
                 <strong>Status:</strong>{" "}
                 <span className={`status-badge ${form.status}`}>{form.status}</span>
@@ -189,6 +221,8 @@ const UpdateProperty = () => {
           </div>
         </div>
       </div>
+
+      <ToastContainer position="top-right" autoClose={2500} hideProgressBar theme="colored" />
     </main>
   );
 };

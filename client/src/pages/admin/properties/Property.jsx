@@ -1,20 +1,23 @@
-// client/src/pages/admin/properties/GetProperties.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Breadcrumb from "../layout/Breadcrumb";
 import { IoPencil } from "react-icons/io5";
 import { MdDeleteForever } from "react-icons/md";
-
-import "../../../assets/css/admin-card.css"; // keep your styles
+import "../../../assets/css/admin-card.css";
 import api from "../../../api/axiosInstance";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import DeleteConfirmModal from "../../../components/modals/DeleteConfirmModal";
 
 const GetProperties = () => {
   const [properties, setProperties] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
 
-  // match ManageAdmin: mobile < 768, tablet >=768 && <1024
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   const navigate = useNavigate();
 
@@ -24,14 +27,13 @@ const GetProperties = () => {
       setProperties(res.data || []);
     } catch (err) {
       console.error(err);
-      alert("Failed to load properties");
+      toast.error("Failed to load properties");
     }
   };
 
   const fetchAssignments = async () => {
     try {
-      const res = await api.get("http://localhost:4500/getassignedproperties");
-      // store if needed later
+      await api.get("http://localhost:4500/getassignedproperties");
     } catch (err) {
       console.error("fetchAssignments error", err);
     }
@@ -45,42 +47,48 @@ const GetProperties = () => {
   useEffect(() => {
     const onResize = () => {
       const width = window.innerWidth;
-      const mobile = width < 768; // strictly less than 768
-      const tablet = width >= 768 && width < 1024; // same as ManageAdmin
-      setIsMobile(mobile);
-      setIsTablet(tablet);
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
     };
     window.addEventListener("resize", onResize);
     onResize();
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Delete property
-  const handleDelete = async (id, e) => {
-    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+  // open modal instead of confirm()
+  const openDeleteModal = (p, e) => {
+    e.stopPropagation();
+    setSelectedProperty(p);
+    setDeleteModalOpen(true);
+  };
 
-    if (!window.confirm("Are you sure you want to delete this property?")) return;
+  const confirmDelete = async () => {
     try {
-      await api.delete(`http://localhost:4500/deleteproperty/${id}`);
+      await api.delete(`http://localhost:4500/deleteproperty/${selectedProperty.id}`);
+      toast.success("Property deleted successfully");
+      setDeleteModalOpen(false);
+      setSelectedProperty(null);
       await fetchProperties();
-      alert("Property deleted successfully");
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Failed to delete property");
+      toast.error("Failed to delete property");
     }
   };
 
   const openDetails = (p) => navigate(`/admin/property/${p.id}`, { state: { item: p } });
 
   const filtered = properties.filter(p =>
-    activeTab === "All" ? true :
-    activeTab === "Available" ? p.status === "available" :
-    activeTab === "Reserved" ? p.status === "reserved" : p.status === "sold"
+    activeTab === "All"
+      ? true
+      : activeTab === "Available"
+      ? p.status === "available"
+      : activeTab === "Reserved"
+      ? p.status === "reserved"
+      : p.status === "sold"
   );
 
   return (
     <>
-      {/* Breadcrumb + Tabs (renders inside AdminLayout's <main>) */}
       <Breadcrumb
         title="Properties"
         breadcrumbText="Property List"
@@ -89,7 +97,7 @@ const GetProperties = () => {
         isTablet={isTablet}
       />
 
-      {/* Desktop Table: show ONLY on desktop (not tablet) */}
+      {/* Desktop Table */}
       {(!isMobile && !isTablet) && (
         <div className="dashboard-table-container">
           <table>
@@ -150,29 +158,49 @@ const GetProperties = () => {
         </div>
       )}
 
-      {/* Tablet & Mobile: show stacked cards */}
+      {/* Mobile / Tablet */}
       {(isMobile || isTablet) && (
         <div className="cardlist">
-          {filtered.length > 0 ? filtered.map(p => (
-            <article key={p.id} className="card-row" onClick={() => openDetails(p)}>
-              <div className="card-left">
-                <img src={`/uploads/${p.image}`} alt={p.title} />
-              </div>
-              <div className="card-middle">
-                <div className="card-title">{p.title}</div>
-                <div className="card-sub">{p.address}</div>
-              </div>
-              <div className="card-right">
-                <div className={`count-pill ${p.status === "available" ? "published" : p.status === "reserved" ? "low-stock" : "out-of-stock"}`}>
-                  ₹{p.price}
+          {filtered.length > 0 ? (
+            filtered.map((p) => (
+              <article key={p.id} className="card-row" onClick={() => openDetails(p)}>
+                <div className="card-left">
+                  <img src={`/uploads/${p.image}`} alt={p.title} />
                 </div>
-              </div>
-            </article>
-          )) : (
+                <div className="card-middle">
+                  <div className="card-title">{p.title}</div>
+                  <div className="card-sub">{p.address}</div>
+                </div>
+                <div className="card-right">
+                  <div
+                    className={`count-pill ${
+                      p.status === "available"
+                        ? "published"
+                        : p.status === "reserved"
+                        ? "low-stock"
+                        : "out-of-stock"
+                    }`}
+                  >
+                    ₹{p.price}
+                  </div>
+                </div>
+              </article>
+            ))
+          ) : (
             <div className="empty-state">No properties found</div>
           )}
         </div>
       )}
+
+      {/* delete modal (random code confirmation) */}
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+      />
+
+      {/* Toastify */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar theme="colored" />
     </>
   );
 };

@@ -5,6 +5,9 @@ import SignaturePad from "react-signature-canvas";
 import { FaEnvelope, FaPhone, FaChevronDown, FaChevronUp, FaFileDownload, FaTrashAlt } from "react-icons/fa";
 import api from "../../../api/axiosInstance";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import DeleteConfirmModal from "../../../components/modals/DeleteConfirmModal";
 
 function ViewAdmin() {
     const { id } = useParams();
@@ -12,6 +15,9 @@ function ViewAdmin() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const user_role = user.role || "";
     const navigate = useNavigate();
+
+    // helper to get local datetime-local formatted string for now
+    const nowLocalInput = () => new Date().toISOString().slice(0, 16);
 
     const [openProperty, setOpenProperty] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -43,7 +49,7 @@ function ViewAdmin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editingPayment, setEditingPayment] = useState(null);
 
-    const [markConfirmedAt, setMarkConfirmedAt] = useState("");
+    const [markConfirmedAt, setMarkConfirmedAt] = useState(nowLocalInput());
     const [rejectReason, setRejectReason] = useState("");
     const [markError, setMarkError] = useState("");
 
@@ -114,7 +120,7 @@ function ViewAdmin() {
                 assigned_by: Number(admin_id),
                 amount: assignedForm.amount || null,
                 details: assignedForm.details || null,
-                assigned_at: assignedForm.assigned_at || null,
+                assigned_at: assignedForm.assigned_at || new Date().toISOString(),
             });
             alert("Property assigned");
             await fetchClientAssignProperties();
@@ -146,7 +152,7 @@ function ViewAdmin() {
             client_id: pay.client_id || id,
             amount: pay.amount,
             payment_method: pay.payment_method,
-            paid_at: pay.paid_at ? pay.paid_at.replace(" ", "T").slice(0, 16) : "",
+            paid_at: pay.paid_at ? pay.paid_at.replace(" ", "T").slice(0, 16) : nowLocalInput(),
             details: pay.notes || "",
         });
         setShowPaymentModal(true);
@@ -162,7 +168,7 @@ function ViewAdmin() {
                 client_id: Number(id),
                 amount: paymentForm.amount || null,
                 payment_method: paymentForm.payment_method || "cash",
-                paid_at: paymentForm.paid_at || new Date().toISOString(),
+                paid_at: paymentForm.paid_at ? new Date(paymentForm.paid_at).toISOString() : new Date().toISOString(),
                 notes: paymentForm.details || null,
                 status: "pending",
                 created_by: admin_id,
@@ -198,7 +204,7 @@ function ViewAdmin() {
         setIsEditing(false);
         setEditingPayment(null);
         setPaymentError("");
-        setPaymentForm({ property_id: "", client_id: "", amount: "", details: "", payment_method: "", paid_at: "" });
+        setPaymentForm({ property_id: "", client_id: id, amount: "", details: "", payment_method: "cash", paid_at: nowLocalInput() });
     };
 
     const toggleProperty = (id) => setOpenProperty(openProperty === id ? null : id);
@@ -264,20 +270,28 @@ function ViewAdmin() {
             await api.post(`${API_ROOT}/addpaymentconfirmation`, fd, { headers: { "Content-Type": "multipart/form-data" } });
             await api.put(`${API_ROOT}/updatepayment/${selectedPayment.id}`, { status: "rejected" });
 
-            alert("Payment rejected");
+            toast.success("Payment rejected");
             setShowMarkPaidModal(false);
             setShowRejectComment(false);
-            sigCanvas.current.clear();
             setSelectedPayment(null);
             await getClientPayments();
         } catch { setMarkError("Rejection failed"); }
     };
 
-    const handleUpdatePaymentStatus = async (paymentId) => {
-        if (!window.confirm("Delete this payment?")) return;
+    // NEW: open delete modal instead of window.confirm
+    const openDeleteModal = (paymentId) => {
+        setDeleteTargetPaymentId(paymentId);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        const paymentId = deleteTargetPaymentId;
+        if (!paymentId) return;
         try {
             await api.put(`${API_ROOT}/updatePaymentStatus/${paymentId}`, { status: "refunded" });
-            alert("Payment deleted");
+            toast.success("Payment deleted");
+            setDeleteModalOpen(false);
+            setDeleteTargetPaymentId(null);
             await getClientPayments();
         } catch { alert("Delete failed"); }
     };
