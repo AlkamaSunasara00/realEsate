@@ -320,11 +320,7 @@ function ViewAdmin() {
             fd.append("confirmed_at", markConfirmedAt.replace("T", " ") || null);
             fd.append("reject_reason", rejectReason);
 
-            if (!sigCanvas.current.isEmpty()) {
-                const blob = await getSignatureBlob();
-                fd.append("signature", blob, `reject_${Date.now()}.png`);
-            }
-
+           
             await api.post(`${API_ROOT}/addpaymentconfirmation`, fd, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
@@ -334,7 +330,7 @@ function ViewAdmin() {
             alert("Payment rejected");
             setShowMarkPaidModal(false);
             setShowRejectComment(false);
-            sigCanvas.current.clear();
+            // sigCanvas.current.clear();
             setSelectedPayment(null);
             await getClientPayments();
         } catch (err) {
