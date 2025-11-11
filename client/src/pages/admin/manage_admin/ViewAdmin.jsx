@@ -58,7 +58,7 @@ function ViewAdmin() {
     client_id: "",
     amount: "",
     details: "",
-    payment_method: "",
+    payment_method: "cash",
     paid_at: "",
     created_by: admin_id,
   });
@@ -195,7 +195,7 @@ function ViewAdmin() {
       client_id: id,
       amount: "",
       details: "",
-      payment_method: "",
+      payment_method: "cash",
       paid_at: nowLocal(),
       created_by: admin_id,
     });

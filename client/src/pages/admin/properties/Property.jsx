@@ -1,3 +1,4 @@
+// client/src/pages/admin/properties/GetProperties.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Breadcrumb from "../layout/Breadcrumb";
@@ -57,12 +58,18 @@ const GetProperties = () => {
 
   // open modal instead of confirm()
   const openDeleteModal = (p, e) => {
-    e.stopPropagation();
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
     setSelectedProperty(p);
     setDeleteModalOpen(true);
   };
 
+  // confirmDelete will be called by modal when code matches
   const confirmDelete = async () => {
+    if (!selectedProperty) {
+      toast.error("No property selected");
+      setDeleteModalOpen(false);
+      return;
+    }
     try {
       await api.delete(`http://localhost:4500/deleteproperty/${selectedProperty.id}`);
       toast.success("Property deleted successfully");
@@ -140,7 +147,7 @@ const GetProperties = () => {
                       title="Edit"
                     />
                     <MdDeleteForever
-                      onClick={(e) => handleDelete(p.id, e)}
+                      onClick={(e) => openDeleteModal(p, e)}          // <-- FIXED: use openDeleteModal
                       style={{ cursor: "pointer", fontSize: 20, color: "var(--red-color)" }}
                       title="Delete"
                     />
@@ -194,7 +201,7 @@ const GetProperties = () => {
 
       {/* delete modal (random code confirmation) */}
       <DeleteConfirmModal
-        isOpen={deleteModalOpen}
+        isOpen={deleteModalOpen}       // <-- boolean flag (fixed)
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
       />
