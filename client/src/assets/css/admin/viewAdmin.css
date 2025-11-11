@@ -886,3 +886,94 @@ label {
     font-size: 22px;
   }
 }
+
+
+
+
+/* ====================== PAYMENT TABLE ENHANCEMENTS ====================== */
+.client-table td .payment-signature,
+.client-table td .payment-reject-reason {
+  margin-top: 10px;
+  padding: 8px 0;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.payment-signature {
+  display: flex;
+  justify-content: center;
+}
+
+.signature-img {
+  height: 50px;
+  width: auto;
+  max-width: 140px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  object-fit: contain;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.payment-reject-reason {
+  font-size: 13px;
+  color: #dc2626;
+  line-height: 1.4;
+  background: #fef2f2;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #dc2626;
+}
+
+/* Action Buttons */
+.client-delete-btn,
+.client-edit-btn,
+.client-mark-paid-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.client-delete-btn { background: #ef4444; color: white; }
+.client-edit-btn { background: #f97316; color: white; }
+.client-mark-paid-btn { background: #22c55e; color: white; }
+
+.client-delete-btn:hover { background: #dc2626; }
+.client-edit-btn:hover { background: #ea580c; }
+.client-mark-paid-btn:hover { background: #16a34a; }
+
+/* ====================== MOBILE CARD VIEW ====================== */
+@media (max-width: 640px) {
+  .client-table tr {
+    position: relative;
+    padding-bottom: 16px;
+  }
+
+  .client-table td[data-label="Actions"] {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .payment-signature,
+  .payment-reject-reason {
+    width: 100%;
+    text-align: center;
+  }
+
+  .signature-img {
+    max-width: 100%;
+    height: 45px;
+  }
+
+  .client-delete-btn,
+  .client-edit-btn,
+  .client-mark-paid-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
