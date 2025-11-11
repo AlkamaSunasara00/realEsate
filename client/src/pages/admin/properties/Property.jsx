@@ -1,9 +1,6 @@
 // client/src/pages/admin/properties/GetProperties.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import Sidebar from "../layout/Sidebar";
-import Navbar from "../layout/Navbar";
 import Breadcrumb from "../layout/Breadcrumb";
 import { IoPencil } from "react-icons/io5";
 import { MdDeleteForever } from "react-icons/md";
@@ -16,7 +13,6 @@ const GetProperties = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isTablet, setIsTablet] = useState(window.innerWidth <= 1024 && window.innerWidth > 768);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchProperties = async () => {
@@ -32,20 +28,15 @@ const GetProperties = () => {
   const fetchAssignments = async () => {
     try {
       const res = await api.get("http://localhost:4500/getassignedproperties");
-      // if you need assignments later, store them; currently not used
-      // setAssignments(res.data || []);
+      // store if needed later
     } catch (err) {
       console.error("fetchAssignments error", err);
     }
   };
 
-  // unified refresh that fetches both lists
-  const refreshAll = async () => {
-    await Promise.all([fetchProperties(), fetchAssignments()]);
-  };
-
   useEffect(() => {
     fetchProperties();
+    fetchAssignments();
   }, []);
 
   useEffect(() => {
@@ -54,7 +45,6 @@ const GetProperties = () => {
       const tablet = window.innerWidth <= 1024 && window.innerWidth > 768;
       setIsMobile(mobile);
       setIsTablet(tablet);
-      if (mobile || tablet) setIsSidebarOpen(false);
     };
     window.addEventListener("resize", onResize);
     onResize();
@@ -63,7 +53,6 @@ const GetProperties = () => {
 
   // Delete property
   const handleDelete = async (id, e) => {
-    // stop propagation if called from row click
     if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 
     if (!window.confirm("Are you sure you want to delete this property?")) return;
@@ -77,10 +66,6 @@ const GetProperties = () => {
     }
   };
 
-  const toggleSidebar = () => setIsSidebarOpen(v => !v);
-
- 
-
   const openDetails = (p) => navigate(`/admin/property/${p.id}`, { state: { item: p } });
 
   const filtered = properties.filter(p =>
@@ -91,105 +76,101 @@ const GetProperties = () => {
 
   return (
     <>
-      <Sidebar isMobile={isMobile} isTablet={isTablet} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <Navbar isMobile={isMobile} isTablet={isTablet} toggleSidebar={toggleSidebar} />
+      {/* Breadcrumb + Tabs (renders inside AdminLayout's <main>) */}
+      <Breadcrumb
+        title="Properties"
+        breadcrumbText="Property List"
+        button={{ link: "/admin/addproperty", text: "Add" }}
+        isMobile={isMobile}
+        isTablet={isTablet}
+      />
 
-      <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
-        <Breadcrumb
-          title="Properties"
-          breadcrumbText="Property List"
-          button={{ link: "/admin/addproperty", text: "Add" }}
-          isMobile={isMobile}
-          isTablet={isTablet}
-        />
-
-        {/* Desktop Table */}
-        {!isMobile && (
-          <div className="dashboard-table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>Title</th>
-                  <th>Description</th>
-                  <th>Address</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Added</th>
-                  <th>Action</th>
+      {/* Desktop Table */}
+      {!isMobile && (
+        <div className="dashboard-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Address</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Added</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length > 0 ? filtered.map(p => (
+                <tr key={p.id} className="clickable-row" onClick={() => openDetails(p)}>
+                  <td>
+                    <img
+                      src={`/uploads/${p.image}`}
+                      alt={p.title}
+                      style={{ width: 80, height: 60, borderRadius: 8, objectFit: "cover" }}
+                    />
+                  </td>
+                  <td>{p.title}</td>
+                  <td style={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {p.description}
+                  </td>
+                  <td>{p.address}</td>
+                  <td style={{ fontWeight: 600, color: "var(--primary-btn-bg)" }}>₹{p.price}</td>
+                  <td>
+                    <span className={`status ${p.status === "available" ? "published" : p.status === "reserved" ? "low-stock" : "out-of-stock"}`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td>{p.createdat?.slice(0, 10)}</td>
+                  <td className="actions">
+                    <IoPencil
+                      onClick={(e) => { e.stopPropagation(); navigate("/admin/updateproperty", { state: { item: p } }); }}
+                      style={{ cursor: "pointer", fontSize: 20, color: "var(--primary-btn-bg)" }}
+                      title="Edit"
+                    />
+                    <MdDeleteForever
+                      onClick={(e) => handleDelete(p.id, e)}
+                      style={{ cursor: "pointer", fontSize: 20, color: "var(--red-color)" }}
+                      title="Delete"
+                    />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filtered.length > 0 ? filtered.map(p => (
-                  <tr key={p.id} className="clickable-row" onClick={() => openDetails(p)}>
-                    <td>
-                      <img
-                        src={`/uploads/${p.image}`}
-                        alt={p.title}
-                        style={{ width: 80, height: 60, borderRadius: 8, objectFit: "cover" }}
-                      />
-                    </td>
-                    <td>{p.title}</td>
-                    <td style={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {p.description}
-                    </td>
-                    <td>{p.address}</td>
-                    <td style={{ fontWeight: 600, color: "var(--primary-btn-bg)" }}>₹{p.price}</td>
-                    <td>
-                      <span className={`status ${p.status === "available" ? "published" : p.status === "reserved" ? "low-stock" : "out-of-stock"}`}>
-                        {p.status}
-                      </span>
-                    </td>
-                    <td>{p.createdat?.slice(0, 10)}</td>
-                    <td className="actions">
-                      <IoPencil
-                        onClick={(e) => { e.stopPropagation(); navigate("/admin/updateproperty", { state: { item: p } }); }}
-                        style={{ cursor: "pointer", fontSize: 20, color: "var(--primary-btn-bg)" }}
-                        title="Edit"
-                      />
-                      <MdDeleteForever
-                        onClick={(e) => handleDelete(p.id, e)}
-                        style={{ cursor: "pointer", fontSize: 20, color: "var(--red-color)" }}
-                        title="Delete"
-                      />
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={8} style={{ textAlign: "center", padding: "40px", opacity: 0.6 }}>
-                      No properties found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+              )) : (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "40px", opacity: 0.6 }}>
+                    No properties found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        {/* Mobile/Tablet Cards */}
-        {(isMobile || isTablet) && (
-          <div className="cardlist">
-            {filtered.length > 0 ? filtered.map(p => (
-              <article key={p.id} className="card-row" onClick={() => openDetails(p)}>
-                <div className="card-left">
-                  <img src={`/uploads/${p.image}`} alt={p.title} />
+      {/* Mobile/Tablet Cards */}
+      {(isMobile || isTablet) && (
+        <div className="cardlist">
+          {filtered.length > 0 ? filtered.map(p => (
+            <article key={p.id} className="card-row" onClick={() => openDetails(p)}>
+              <div className="card-left">
+                <img src={`/uploads/${p.image}`} alt={p.title} />
+              </div>
+              <div className="card-middle">
+                <div className="card-title">{p.title}</div>
+                <div className="card-sub">{p.address}</div>
+              </div>
+              <div className="card-right">
+                <div className={`count-pill ${p.status === "available" ? "published" : p.status === "reserved" ? "low-stock" : "out-of-stock"}`}>
+                  ₹{p.price}
                 </div>
-                <div className="card-middle">
-                  <div className="card-title">{p.title}</div>
-                  <div className="card-sub">{p.address}</div>
-                </div>
-                <div className="card-right">
-                  <div className={`count-pill ${p.status === "available" ? "published" : p.status === "reserved" ? "low-stock" : "out-of-stock"}`}>
-                    ₹{p.price}
-                  </div>
-                </div>
-              </article>
-            )) : (
-              <div className="empty-state">No properties found</div>
-            )}
-          </div>
-        )}
-      </main>
+              </div>
+            </article>
+          )) : (
+            <div className="empty-state">No properties found</div>
+          )}
+        </div>
+      )}
     </>
   );
 };

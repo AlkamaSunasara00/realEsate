@@ -1,7 +1,8 @@
+// src/components/admin/Sidebar.jsx
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { RxDashboard } from 'react-icons/rx';
-import { RiAdminLine } from 'react-icons/ri';
+import { RiAdminLine, RiHome7Fill, RiMoneyDollarCircleLine, RiFileList3Line } from 'react-icons/ri';
 import { FiLogOut, FiX } from 'react-icons/fi';
 import '../../../assets/css/admin/sidebar.css';
 
@@ -10,6 +11,11 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
   const role = admin?.role || 'client';
   const adminId = admin?.id;
 
+  const [menuReady, setMenuReady] = useState(false);
+  useEffect(() => {
+    if (admin) setMenuReady(true);
+  }, [admin]);
+
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
       onLogout();
@@ -17,147 +23,159 @@ const Sidebar = ({ admin, onLogout, isMobile, isTablet, isSidebarOpen, toggleSid
     }
   };
 
-  // Close sidebar when route changes (on mobile/tablet)
+  const handleNavClick = () => {
+    if (!(isMobile || isTablet)) return;
+    setTimeout(() => {
+      if (isSidebarOpen) toggleSidebar();
+    }, 120);
+  };
+
+  // Scroll lock
   useEffect(() => {
     if ((isMobile || isTablet) && isSidebarOpen) {
-      const timer = setTimeout(() => toggleSidebar(), 100);
-      return () => clearTimeout(timer);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  }, [location.pathname]);
-
-  // Disable body scroll on sidebar open
-  useEffect(() => {
-    document.body.style.overflow = (isMobile || isTablet) && isSidebarOpen ? 'hidden' : 'unset';
-    return () => (document.body.style.overflow = 'unset');
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isSidebarOpen, isMobile, isTablet]);
 
-  // ESC key closes sidebar
+  // ESC key
   useEffect(() => {
-    const handleEscKey = (e) => {
-      if (e.key === 'Escape' && isSidebarOpen && (isMobile || isTablet)) toggleSidebar();
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isSidebarOpen && (isMobile || isTablet)) {
+        toggleSidebar();
+      }
     };
-    document.addEventListener('keydown', handleEscKey);
-    return () => document.removeEventListener('keydown', handleEscKey);
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
   }, [isSidebarOpen, isMobile, isTablet, toggleSidebar]);
 
   const getSidebarClasses = () => {
     let classes = 'admin-dashboard-sidebar';
     if (isMobile) classes += ' mobile-sidebar';
-    else if (isTablet) classes += ' tablet-sidebar';
+    if (isTablet) classes += ' tablet-sidebar';
     if ((isMobile || isTablet) && isSidebarOpen) classes += ' sidebar-open';
     return classes;
   };
 
-  const handleNavClick = () => {
-    if ((isMobile || isTablet) && isSidebarOpen) toggleSidebar();
+  const icons = {
+    dashboard: <RxDashboard />,
+    profile: <RiAdminLine />,
+    clients: <RiAdminLine />,
+    properties: <RiHome7Fill />,
+    assigned: <RiFileList3Line />,
+    payments: <RiMoneyDollarCircleLine />,
   };
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Overlay */}
       {(isMobile || isTablet) && isSidebarOpen && (
         <div
           className="sidebar-overlay"
           onClick={toggleSidebar}
           role="button"
           tabIndex={0}
-          aria-label="Close sidebar overlay"
+          aria-label="Close sidebar"
           onKeyDown={(e) => e.key === 'Enter' && toggleSidebar()}
         />
       )}
 
-      <aside className={getSidebarClasses()} aria-label="Main navigation sidebar">
-        {/* Header */}
-        {(isMobile || isTablet) ? (
+      <aside className={getSidebarClasses()} aria-label="Admin navigation">
+        {/* Mobile Header */}
+        {(isMobile || isTablet) && (
           <div className="sidebar-mobile-header">
-            <div className="admin-sidebar-logo"><h4>XCART</h4></div>
+            <div className="admin-sidebar-logo">
+              <h4>XCART</h4>
+            </div>
             <button className="sidebar-close-btn" onClick={toggleSidebar} aria-label="Close sidebar">
               <FiX />
             </button>
           </div>
-        ) : (
-          <div className="admin-sidebar-logo"><h4>XCART</h4></div>
         )}
 
-        {/* Sidebar Menu */}
-        <nav className="menu-content">
-          <h6>MENU</h6>
-          <ul>
-            {role === 'admin' ? (
-              <>
-                <li>
-                  <NavLink
-                    to="/admin/dashboard"
-                    onClick={handleNavClick}
-                    className={({ isActive }) => (isActive ? 'active' : '')}
-                  >
-                    <RxDashboard />
-                    <span>Dashboard</span>
-                  </NavLink>
-                </li>
-              </>
-            ) : (
-              <li>
-                <NavLink
-                  to={`/admin/view-admin/${adminId}`}
-                  onClick={handleNavClick}
-                  className={({ isActive }) => (isActive ? 'active' : '')}
-                >
-                  <RiAdminLine />
-                  <span>My Profile</span>
-                </NavLink>
-              </li>
-            )}
-          </ul>
-        </nav>
+        {/* Desktop Logo */}
+        {!isMobile && !isTablet && (
+          <div className="admin-sidebar-logo">
+            <h4>XCART</h4>
+          </div>
+        )}
 
-        {/* Admin-only section */}
-        {role === 'admin' && (
+        {/* === USER INFO – HORIZONTAL LAYOUT === */}
+        {admin && (
+          <div className="sidebar-user-info-horizontal">
+            <div className="sidebar-user-avatar">
+              {admin.profileImage ? (
+                <img src={admin.profileImage} alt={admin.name} />
+              ) : (
+                <RiAdminLine />
+              )}
+            </div>
+            <div className="sidebar-user-details">
+              <div className="sidebar-user-name">{admin.name || 'Admin'}</div>
+              <div className="sidebar-user-role">{role.toUpperCase()}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Menu */}
+        {admin && (
           <>
             <nav className="menu-content">
-              <h6>USER MANAGEMENT</h6>
+              <h6>MENU</h6>
               <ul>
-                <li>
-                  <NavLink
-                    to="/admin/manage-admins"
-                    onClick={handleNavClick}
-                    className={({ isActive }) => (isActive ? 'active' : '')}
-                  >
-                    <RiAdminLine />
-                    <span>Clients</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/admin/property" onClick={handleNavClick}>
-                    <RiAdminLine />
-                    <span>Properties</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/admin/propertyassigned" onClick={handleNavClick}>
-                    <RiAdminLine />
-                    <span>Property Assigned</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/admin/payments" onClick={handleNavClick}>
-                    <RiAdminLine />
-                    <span>Payments</span>
-                  </NavLink>
-                </li>
+                {role === 'admin' ? (
+                  <li>
+                    <NavLink to="/admin/dashboard" onClick={handleNavClick} className={({ isActive }) => isActive ? 'active' : ''}>
+                      {icons.dashboard} <span>Dashboard</span>
+                    </NavLink>
+                  </li>
+                ) : (
+                  <li>
+                    <NavLink to={`/admin/view-admin/${adminId}`} onClick={handleNavClick} className={({ isActive }) => isActive ? 'active' : ''}>
+                      {icons.profile} <span>My Profile</span>
+                    </NavLink>
+                  </li>
+                )}
               </ul>
             </nav>
+
+            {role === 'admin' && (
+              <nav className="menu-content">
+                <h6>MANAGEMENT</h6>
+                <ul>
+                  <li>
+                    <NavLink to="/admin/manage-admins" onClick={handleNavClick} className={({ isActive }) => isActive ? 'active' : ''}>
+                      {icons.clients} <span>Clients</span>
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="/admin/property" onClick={handleNavClick} className={({ isActive }) => isActive ? 'active' : ''}>
+                      {icons.properties} <span>Properties</span>
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="/admin/propertyassigned" onClick={handleNavClick} className={({ isActive }) => isActive ? 'active' : ''}>
+                      {icons.assigned} <span>Assigned</span>
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="/admin/payments" onClick={handleNavClick} className={({ isActive }) => isActive ? 'active' : ''}>
+                      {icons.payments} <span>Payments</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              </nav>
+            )}
+
+            <div className="menu-content logout-section">
+              <button onClick={handleLogout} className="sidebar-logout-btn">
+                <FiLogOut /> <span>Logout</span>
+              </button>
+            </div>
           </>
         )}
-
-        {/* Logout */}
-        <div className="menu-content">
-          <h6>OTHERS</h6>
-          <button onClick={handleLogout} className="sidebar-logout-btn">
-            <FiLogOut />
-            <span>Logout</span>
-          </button>
-        </div>
       </aside>
     </>
   );

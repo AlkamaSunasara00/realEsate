@@ -85,7 +85,7 @@ const ClientDetails = () => {
               className="info-btn form-save-btn"
               onClick={() => navigate(`/admin/view-admin/${id}`)}
             >
-              <MdPayments /> Payment
+              <MdPayments />View Payments
             </button>
           </div>
         </div>

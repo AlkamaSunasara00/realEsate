@@ -337,7 +337,7 @@ button[aria-disabled="true"] {
   .form-field.full-width { grid-column: span 1; }
 
   .view-admin-header .header-top {
-    flex-direction: column;
+    flex-direction: row;
     align-items: stretch;
     gap: 10px;
   }

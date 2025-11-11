@@ -5,7 +5,7 @@
 /* ====================== ROOT LAYOUT ====================== */
 .client-section {
   /* padding: 28px; */
-  background: #f5f5f7;
+  background: var(--light-white-color);
   min-height: 100vh;
   color: #1e293b;
 }
@@ -534,7 +534,7 @@ label {
   }
 
   .client-add-sale-btn {
-    width: 100%;
+    width: fit-content;
     justify-content: center;
   }
 
@@ -600,7 +600,7 @@ label {
   }
 
   .client-add-payment-btn {
-    width: 100%;
+     width: fit-content;
   }
 
   /* TABLE - Card style on mobile */

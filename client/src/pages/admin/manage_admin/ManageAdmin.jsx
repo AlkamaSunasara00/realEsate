@@ -1,227 +1,181 @@
+// client/src/pages/admin/manage/EditAdmin.jsx
 import React, { useEffect, useState } from "react";
-import Sidebar from "../layout/Sidebar";
-import Navbar from "../layout/Navbar";
-import Breadcrumb from "../layout/Breadcrumb";
-import { IoPencil } from "react-icons/io5";
-import { MdDeleteForever } from "react-icons/md";
+import { MdSave } from "react-icons/md";
+import { IoChevronBackOutline } from "react-icons/io5";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../../api/axiosInstance";
-import { NavLink, useNavigate, useNavigationType } from "react-router-dom";
 
-import "../../../assets/css/admin-card.css"
-import { FaRegEye } from "react-icons/fa";
-
-const ManageAdmin = () => {
-  const [activeTab, setActiveTab] = useState("All");
-  const [admins, setAdmins] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState(null); // for modal
+const EditAdmin = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    number: "",
+    alt_number: "",
+    status: "active",
+  });
+  const [imgFile, setImgFile] = useState(null);
+  const [imgPreview, setImgPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isTablet, setIsTablet] = useState(window.innerWidth > 768 && window.innerWidth <= 1024);
 
   useEffect(() => {
-    const fetchClients = async () => {
+    const onResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setIsTablet(window.innerWidth > 768 && window.innerWidth <= 1024);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (imgPreview) URL.revokeObjectURL(imgPreview);
+    };
+  }, [imgPreview]);
+
+  // FETCH ADMIN DATA
+  useEffect(() => {
+    const load = async () => {
       try {
-        const res = await api.get("/admin/clients");
-        setAdmins(res.data || []);
-      } catch (error) {
-        console.error(error);
+        const res = await api.get(`/admin/get-client-by-id/${id}`); // CORRECT ENDPOINT
+        const data = res.data;
+        setForm({
+          name: data.name || "",
+          email: data.email || "",
+          number: data.number || "",
+          alt_number: data.alt_number || "",
+          status: data.status || "active",
+        });
+        setImgPreview(data.img ? `/uploads/${data.img}` : null);
+      } catch (err) {
+        console.error("Failed to load admin:", err);
+        alert("Could not load admin data");
       }
     };
-    fetchClients();
-  }, []);
+    if (id) load();
+  }, [id]);
 
-  // responsive listener
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-      setIsTablet(width >= 768 && width < 1024);
-      if (!(width < 768) && !(width >= 768 && width < 1024)) {
-        setIsSidebarOpen(false);
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleChange = (e) => setForm(s => ({ ...s, [e.target.name]: e.target.value }));
 
-  const filtered = admins.filter((a) =>
-    activeTab === "All" ? true : activeTab === "Active" ? a.status === "active" : a.status === "block"
-  );
+  const handleImg = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (imgPreview) URL.revokeObjectURL(imgPreview);
+    setImgFile(file);
+    setImgPreview(URL.createObjectURL(file));
+  };
 
-  const toggleSidebar = () => setIsSidebarOpen(v => !v);
+  const isValid = () => form.name && form.email;
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this admin?")) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isValid()) return alert("Name and Email are required");
+    setLoading(true);
+
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    if (imgFile) fd.append("img", imgFile);
+
     try {
-      await api.delete(`/admin/clients/${id}`);
-      setAdmins(prev => prev.filter(a => a.id !== id));
-      // if modal open for same admin, close it
-      if (selectedAdmin?.id === id) setSelectedAdmin(null);
-    } catch (error) {
-      console.error("Delete error:", error);
-      alert("Failed to delete admin");
+      await api.put(`/admin/update-client/${id}`, fd);
+      alert("Admin updated!");
+      navigate("/admin/manage-admins");
+    } catch (err) {
+      alert(err?.response?.data?.error || "Update failed");
+    } finally {
+      setLoading(false);
     }
   };
-  const currentAdmin = { name: "Admin User", role: "admin" };
 
   return (
-    <>
-      <Sidebar
-        admin={currentAdmin}
-        onLogout={() => { console.log("Logging out..."); }}
-        isMobile={isMobile}
-        isTablet={isTablet}
-        isSidebarOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
-      />
-      <Navbar
-        admin={currentAdmin}
-        isMobile={isMobile}
-        isTablet={isTablet}
-        toggleSidebar={toggleSidebar}
-      />
-
-      <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""} ${isSidebarOpen ? "sidebar-open" : ""}`}>
-        <Breadcrumb
-          title="Admin"
-          breadcrumbText="Admin List"
-          button={{ link: "/admin/add-new_admin", text: "Add New Admin" }}
-          isMobile={isMobile}
-          isTablet={isTablet}
-        />
-
-        <div className="admin-panel-header-tabs">
-          <button className={`admin-panel-header-tab ${activeTab === "All" ? "active" : ""}`} onClick={() => setActiveTab("All")}>All</button>
-          <button className={`admin-panel-header-tab ${activeTab === "Active" ? "active" : ""}`} onClick={() => setActiveTab("Active")}>Active</button>
-          <button className={`admin-panel-header-tab ${activeTab === "Blocked" ? "active" : ""}`} onClick={() => setActiveTab("Blocked")}>Blocked</button>
+    <main className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""}`}>
+      {/* Top Buttons */}
+      <div className="form-header-top" style={{ marginTop: 4 }}>
+        <div className="header-top-left">
+          <button className="header-back-btn" onClick={() => navigate(-1)}>
+            <IoChevronBackOutline /> Back
+          </button>
         </div>
+        <div className="header-top-right">
+          <button
+            className="primary-btn form-save-btn"
+            onClick={handleSubmit}
+            disabled={!isValid() || loading}
+          >
+            <MdSave /> {loading ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </div>
 
-        {/* === Desktop / wide screens: keep your table === */}
-        {!isMobile && (
-          <div className={`dashboard-table-container ${isTablet ? "tablet-table" : ""}`}>
-            <table>
-              <thead>
-                <tr>
-                  <th className="admin-name">Name</th>
-                  {!isMobile && <th className="admin-email">Email</th>}
-                  {!isMobile && <th className="admin-phone">Phone No</th>}
-                  <th className="admin-status">Status</th>
-                  {!isMobile && <th className="admin-added">Added</th>}
-                  <th className="admin-actions">Action</th>
-                </tr>
-              </thead>
+      {/* Title */}
+      <div className="form-header-title">
+        <h5>Edit Admin</h5>
+      </div>
 
-              <tbody>
-                {filtered.length > 0 ? (
-                  filtered.map((a) => (
-                    <tr key={a.id}>
-                      <td className="product-info admin-profile">
-                        <img src={`/uploads/${a.img}`} alt={`${a.name} profile`} />
-                        <div className="admin-info-mobile">
-                          <span>{a.name}</span>
-                          {isMobile && <p>{a.email}</p>}
-                        </div>
-                      </td>
-                      {!isMobile && <td className="admin-email">{a.email}</td>}
-                      {!isMobile && <td className="admin-phone">{a.number}</td>}
-                      <td className="admin-status">
-                        <span className={`status ${a.status === "active" ? "published" : "out-of-stock"}`}>{a.status}</span>
-                      </td>
-                      {!isMobile && <td className="admin-added">{a.createdat?.slice(0, 10)}</td>}
-                      <td className="actions admin-actions">
-                        <FaRegEye onClick={() => navigate(`/admin/view-admin/${a.id}`)} />
-                        <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" title="Edit admin" />
-                        <MdDeleteForever onClick={() => handleDelete(a.id)} className="delete-btn" title="Delete admin" />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: "40px", opacity: 0.6 }}>
-                      No admins found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {/* PREVIEW CARD ON TOP */}
+      <div className="preview-card preview-top">
+        <h6>Profile Preview</h6>
+        <div className="preview-content">
+          {imgPreview ? (
+            <img src={imgPreview} alt="preview" className="preview-img" />
+          ) : (
+            <div className="no-image-placeholder">No image</div>
+          )}
+          <div className="preview-meta">
+            <div><strong>Name:</strong> {form.name || "—"}</div>
+            <div><strong>Email:</strong> {form.email || "—"}</div>
+            <div><strong>Phone:</strong> {form.number || "—"}</div>
+            <div>
+              <strong>Status:</strong>{" "}
+              <span className={`status-badge ${form.status}`}>{form.status}</span>
+            </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        
-        {(isMobile || isTablet) && (
-          <div className="cardlist" style={{ marginTop: 16 }}>
-            {filtered.length > 0 ? filtered.map(a => (
-              <article
-                key={a.id}
-                className="card-row"
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/admin/client/${a.id}`)} // <-- navigate to new client page for mobile & tablet
-                onKeyDown={(e) => { if (e.key === "Enter") navigate(`/admin/client/${a.id}`); }}
-              >
-                <div className="card-left">
-                  <img src={`/uploads/${a.img}`} alt={a.name} />
-                </div>
-
-                <div className="card-middle">
-                  <div className="card-title">{a.name}</div>
-                  <div className="card-sub">{a.email}</div>
-                </div>
-
-                <div className="card-right">
-                  <div className={`count-pill ${a.status === "active" ? "published" : "out-of-stock"}`}>
-                    {a.status}
-                  </div>
-                </div>
-              </article>
-            )) : (
-              <div className="empty-state">No admins found</div>
-            )}
-          </div>
-        )}
-
-
-        {/* === Modal for selected admin === */}
-        {selectedAdmin && (
-          <div className="detail-modal-overlay" onClick={() => setSelectedAdmin(null)}>
-            <div className="detail-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="detail-modal-header">
-                <div className="header-left">
-                  <img src={`/uploads/${selectedAdmin.img}`} alt={selectedAdmin.name} />
-                  <div>
-                    <h3>{selectedAdmin.name}</h3>
-                    <p className="muted">{selectedAdmin.email}</p>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button className="icon-btn" onClick={() => navigate(`/admin/edit-admin/${selectedAdmin.id}`)}>Edit</button>
-                  <button className="icon-btn delete" onClick={() => handleDelete(selectedAdmin.id)}>Delete</button>
-                  <button className="close-btn" onClick={() => setSelectedAdmin(null)}>Close</button>
-                </div>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="form-content-grid" encType="multipart/form-data">
+        <div className="form-left">
+          <div className="form-card add-form-card">
+            <h6>General Information</h6>
+            <div className="form-grid" style={{ marginTop: 8 }}>
+              <div className="form-field">
+                <label>Name</label>
+                <input name="name" value={form.name} onChange={handleChange} placeholder="Enter name" />
               </div>
-
-              <div className="detail-modal-body">
-                <div className="detail-row"><strong>Phone:</strong> {selectedAdmin.number || "—"}</div>
-                <div className="detail-row"><strong>Status:</strong> {selectedAdmin.status}</div>
-                <div className="detail-row"><strong>Added:</strong> {selectedAdmin.createdat?.slice(0, 10) || "—"}</div>
-                <div className="detail-row"><strong>About:</strong> <div style={{ marginTop: 6 }}>{selectedAdmin.about || "—"}</div></div>
+              <div className="form-field">
+                <label>Email</label>
+                <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Enter email" />
               </div>
-
-              <div className="detail-modal-footer">
-                <button className="primary-btn" onClick={() => navigate(`/admin/edit-admin/${selectedAdmin.id}`)}>Edit</button>
-                <button className="cancel-btn" onClick={() => { handleDelete(selectedAdmin.id); }}>Delete</button>
-                <button className="info-btn" onClick={() => setSelectedAdmin(null)}>Close</button>
+              <div className="form-field">
+                <label>Phone Number</label>
+                <input name="number" value={form.number} onChange={handleChange} placeholder="Phone" />
+              </div>
+              <div className="form-field">
+                <label>Alt Phone</label>
+                <input name="alt_number" value={form.alt_number} onChange={handleChange} placeholder="Alternate" />
+              </div>
+              <div className="form-field">
+                <label>Status</label>
+                <select name="status" value={form.status} onChange={handleChange}>
+                  <option value="active">Active</option>
+                  <option value="block">Blocked</option>
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Change Password (optional)</label>
+                <input name="password" type="password" onChange={handleChange} placeholder="Leave blank to keep" />
+              </div>
+              <div className="form-field full-width">
+                <label>Change Profile Image</label>
+                <input type="file" accept="image/*" onChange={handleImg} />
               </div>
             </div>
           </div>
-        )}
-
-      </main>
-    </>
+        </div>
+      </form>
+    </main>
   );
 };
 
-export default ManageAdmin;
+export default EditAdmin;
