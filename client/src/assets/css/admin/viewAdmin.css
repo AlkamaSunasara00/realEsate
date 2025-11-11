@@ -977,3 +977,7 @@ label {
     text-align: center;
   }
 }
+
+/* Keep all your existing styles below */
+* { font-family: "Inter", sans-serif; }
+/* ... rest of your CSS ... */
