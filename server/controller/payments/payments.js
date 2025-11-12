@@ -102,6 +102,7 @@ const updatePayment = (req, res) => {
     status,
     notes,
     paid_at,
+    invoice_path,
   } = req.body;
 
   const q = `UPDATE payments SET
@@ -112,6 +113,7 @@ const updatePayment = (req, res) => {
     status = COALESCE(?, status),
     notes = COALESCE(?, notes),
     paid_at = COALESCE(?, paid_at),
+    invoice_path = COALESCE(?, invoice_path),
     updated_at = NOW()
     WHERE id = ?`;
 
@@ -123,15 +125,18 @@ const updatePayment = (req, res) => {
     status || null,
     notes || null,
     paid_at || null,
+    invoice_path || null,
     id,
   ];
 
   connection.query(q, params, (err, result) => {
     if (err) return res.status(500).json({ error: "database error", details: err });
-    if (result.affectedRows === 0) return res.status(404).json({ error: "payment not found" });
+    if (result.affectedRows === 0)
+      return res.status(404).json({ error: "payment not found" });
     return res.status(200).json({ message: "payment updated" });
   });
 };
+
 
 // delete payment
 const deletePayment = (req, res) => {

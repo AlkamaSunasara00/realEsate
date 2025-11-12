@@ -13,7 +13,7 @@ const login = (req, res) => {
     return res.status(400).json({ error: 'Identifier and password are required' });
   }
 
-  const sql = 'SELECT * FROM admin WHERE email = ? OR number = ?';
+  const sql = 'SELECT * FROM admin WHERE email = ? OR number = ? ';
   connection.query(sql, [identifier, identifier], async (err, results) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
@@ -36,7 +36,7 @@ const login = (req, res) => {
 
     const { token: accessToken, jti } = generateAccessToken(admin, ip, userAgent);
     const now = new Date();
-    const expires = new Date(now.getTime() + 120* 60 * 1000);
+    const expires = new Date(now.getTime() + 120 * 60 * 1000);
 
     connection.query(
       'INSERT INTO active_tokens (token_id, admin_id, ip_address, user_agent, issued_at, last_activity, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -234,12 +234,13 @@ const updateClient = async (req, res) => {
   });
 };
 
-const deleteClient = (req, res) => {
+const trahClient = (req, res) => {
   const { id } = req.params;
+  const { trash } = req.body;
 
-  connection.query("DELETE FROM admin WHERE id=?", [id], (err) => {
+  connection.query("UPDATE admin SET trash =? WHERE id =? ", [trash, id], (err, result) => {
     if (err) return res.status(500).json({ error: "DB Error" });
-    res.json({ message: "Admin deleted successfully" });
+    res.json(result);
   });
 };
 
@@ -252,5 +253,5 @@ module.exports = {
   addClient,
   getClient,
   updateClient,
-  deleteClient
+  trahClient
 };

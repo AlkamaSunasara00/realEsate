@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DeleteConfirmModal from "../../../components/modals/DeleteConfirmModal";
+import InvoiceModal from "../../../components/invoice/InvoiceModal";
 
 function ViewAdmin() {
   const { id } = useParams();
@@ -395,23 +396,28 @@ function ViewAdmin() {
   };
 
   // Download invoice helper
-  const handleDownloadInvoice = async (paymentId) => {
-    try {
-      const { data } = await api.get(`${API_ROOT}/generateInvoice/${paymentId}`, {
-        responseType: "blob",
-      });
-      const url = window.URL.createObjectURL(new Blob([data], { type: "application/pdf" }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `invoice_${paymentId}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast.success("Invoice downloaded");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to download invoice");
-    }
-  };
+ const handleDownloadInvoice = async (paymentId) => {
+  try {
+    const response = await api.get(`/downloadInvoice/${paymentId}`, {
+      responseType: "blob",
+    });
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `invoice_${paymentId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast.success("Invoice downloaded successfully");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to download invoice");
+  }
+};
+
+
+
 
   // ───────────────── RENDER ─────────────────
   return (
@@ -504,33 +510,51 @@ function ViewAdmin() {
                             clientPayments.filter(pay => pay.property_id === p.id).map((pay, idx) => {
                               const confirm = confirmationPayments?.[pay.id];
                               return (
-                              <tr key={pay.id} onClick={() => fetchConfirmationByPaymentId(pay.id)}>
-                                <td data-label="S.No">{idx + 1}</td>
-                                <td data-label="Amount">₹{Number(pay.amount).toLocaleString()}</td>
-                                <td data-label="Status">
-                                  <span
-                                    className="client-badge"
-                                    style={{
-                                      backgroundColor:
-                                        pay.status === "completed" ? "#22c55e" :
-                                          pay.status === "rejected" ? "#ef4444" :
-                                            pay.status === "deleted" ? "#6b7280" :
-                                              "#f97316",
-                                      color: pay.status === "pending" ? "black" : "white",
-                                    }}
-                                  >
-                                    {pay.status}
-                                  </span>
-                                </td>
-                                <td data-label="Payment Date">
-                                  {pay.paid_at ? new Date(pay.paid_at).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN")}
-                                </td>
-                                <td data-label="Actions" onClick={(e) => e.stopPropagation()}>
-                                  {pay.status === "deleted" ? null : (
-                                    pay.status === "completed" || pay.status === "rejected" ? (
-                                      user_role === "admin" ? (
-                                        <div style={{ display: "flex", gap: 6 }}>
-                                          {pay.status === "completed" && (
+                                <tr key={pay.id} onClick={() => fetchConfirmationByPaymentId(pay.id)}>
+                                  <td data-label="S.No">{idx + 1}</td>
+                                  <td data-label="Amount">₹{Number(pay.amount).toLocaleString()}</td>
+                                  <td data-label="Status">
+                                    <span
+                                      className="client-badge"
+                                      style={{
+                                        backgroundColor:
+                                          pay.status === "completed" ? "#22c55e" :
+                                            pay.status === "rejected" ? "#ef4444" :
+                                              pay.status === "deleted" ? "#6b7280" :
+                                                "#f97316",
+                                        color: pay.status === "pending" ? "black" : "white",
+                                      }}
+                                    >
+                                      {pay.status}
+                                    </span>
+                                  </td>
+                                  <td data-label="Payment Date">
+                                    {pay.paid_at ? new Date(pay.paid_at).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN")}
+                                  </td>
+                                  <td data-label="Actions" onClick={(e) => e.stopPropagation()}>
+                                    {pay.status === "deleted" ? null : (
+                                      pay.status === "completed" || pay.status === "rejected" ? (
+                                        user_role === "admin" ? (
+                                          <div style={{ display: "flex", gap: 6 }}>
+                                            {pay.status === "completed" && (
+                                              <button
+                                                className="client-download-btn"
+                                                onClick={() => handleDownloadInvoice(pay.id)}
+                                                title="Download Invoice"
+                                              >
+                                                <FaFileDownload />
+                                              </button>
+                                            )}
+                                            <button
+                                              className="client-delete-btn"
+                                              onClick={(e) => openDeleteModal(pay.id, e)}
+                                              title="Delete"
+                                            >
+                                              <FaTrashAlt />
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          pay.status === "completed" && (
                                             <button
                                               className="client-download-btn"
                                               onClick={() => handleDownloadInvoice(pay.id)}
@@ -538,40 +562,22 @@ function ViewAdmin() {
                                             >
                                               <FaFileDownload />
                                             </button>
-                                          )}
-                                          <button
-                                            className="client-delete-btn"
-                                            onClick={(e) => openDeleteModal(pay.id, e)}
-                                            title="Delete"
-                                          >
-                                            <FaTrashAlt />
-                                          </button>
-                                        </div>
+                                          )
+                                        )
                                       ) : (
-                                        pay.status === "completed" && (
-                                          <button
-                                            className="client-download-btn"
-                                            onClick={() => handleDownloadInvoice(pay.id)}
-                                            title="Download Invoice"
-                                          >
-                                            <FaFileDownload />
+                                        pay.created_by == admin_id ? (
+                                          <button className="client-edit-btn" onClick={(e) => handleEditPayment(e, pay)}>
+                                            Edit
+                                          </button>
+                                        ) : (
+                                          <button className="client-mark-paid-btn" onClick={(e) => openMarkPaidForPayment(e, pay)}>
+                                            Mark Paid
                                           </button>
                                         )
                                       )
-                                    ) : (
-                                      pay.created_by == admin_id ? (
-                                        <button className="client-edit-btn" onClick={(e) => handleEditPayment(e, pay)}>
-                                          Edit
-                                        </button>
-                                      ) : (
-                                        <button className="client-mark-paid-btn" onClick={(e) => openMarkPaidForPayment(e, pay)}>
-                                          Mark Paid
-                                        </button>
-                                      )
-                                    )
-                                  )}
-                                </td>
-                              </tr>
+                                    )}
+                                  </td>
+                                </tr>
                               );
                             })
                           ) : (
@@ -650,7 +656,7 @@ function ViewAdmin() {
       )}
 
       {/* MARK PAID / REJECT MODAL */}
-      {showMarkPaidModal && (
+      {/* {showMarkPaidModal && (
         <div className="payment-modal-overlay">
           <div className="payment-modal better-modal mark-paid-modal">
             <div className="payment-modal-header">
@@ -700,7 +706,19 @@ function ViewAdmin() {
             )}
           </div>
         </div>
+      )} */}
+
+      {showMarkPaidModal && selectedPayment && (
+        <InvoiceModal
+          payment={selectedPayment}
+          clientInfo={clientInfo}
+          property={selectedProperty}
+          adminId={admin_id}
+          onClose={() => setShowMarkPaidModal(false)}
+          refreshPayments={getClientPayments}
+        />
       )}
+
 
       {/* Payment delete confirmation modal */}
       <DeleteConfirmModal

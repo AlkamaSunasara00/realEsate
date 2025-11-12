@@ -97,6 +97,19 @@ const ManageAdmin = () => {
     }
   };
 
+
+ const handleTrashClient = async (id) => {
+  try {
+    const res = await api.put(`/admin/trash-client/${id}`,{trash:'1'});
+    alert("done")
+    // refresh list or remove item from state
+  } catch (err) {
+    console.error("trash client error", err);
+    alert("Failed to trash client");
+  }
+};
+
+
   // show detail modal for desktop
   const openDetailModal = (admin) => {
     setSelectedAdmin(admin);
@@ -112,9 +125,8 @@ const ManageAdmin = () => {
       {/* <Navbar /> */}
 
       <main
-        className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""} ${
-          isSidebarOpen ? "sidebar-open" : ""
-        }`}
+        className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""} ${isSidebarOpen ? "sidebar-open" : ""
+          }`}
       >
         <Breadcrumb
           title="Clients"
@@ -170,7 +182,7 @@ const ManageAdmin = () => {
                       <td className="actions admin-actions">
                         <FaRegEye onClick={() => navigate(`/admin/view-admin/${a.id}`)} style={{ cursor: "pointer", marginRight: 8 }} />
                         <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" title="Edit Client" style={{ cursor: "pointer", marginRight: 8 }} />
-                        <MdDeleteForever onClick={() => openDeleteModal(a)} className="delete-btn" title="Delete Client" style={{ cursor: "pointer" }} />
+                        <MdDeleteForever onClick={() => handleTrashClient(a.id)} className="delete-btn" title="Delete Client" style={{ cursor: "pointer" }} />
                       </td>
                     </tr>
                   ))

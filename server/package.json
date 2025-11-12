@@ -18,12 +18,14 @@
     "dotenv": "^16.6.1",
     "env-cmd": "^10.1.0",
     "express": "^5.1.0",
+    "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",
     "mysql": "^2.18.1",
     "mysql2": "^3.14.3",
     "nodemon": "^3.1.10",
     "path": "^0.12.7",
+    "pdfkit": "^0.17.2",
     "uuid": "^11.1.0"
   }
 }

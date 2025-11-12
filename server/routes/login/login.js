@@ -15,6 +15,6 @@ router.get('/getUserById/:id', verifyToken, login.getUserById);
 router.post('/add-client', verifyToken, authorizeRole('admin'), upload.single("img"), login.addClient);
 router.get('/clients', verifyToken, authorizeRole('admin'), login.getClient);
 router.put('/update-client/:id', verifyToken, authorizeRole('admin'), upload.single("img"), login.updateClient);
-router.delete('/delete-client/:id', verifyToken, authorizeRole('admin'), login.deleteClient);
+router.put('/trash-client/:id', verifyToken, authorizeRole('admin'), login.trahClient);
 
 module.exports = router;

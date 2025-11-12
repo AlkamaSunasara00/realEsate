@@ -34,48 +34,62 @@ const getConfirmationById = (req, res) => {
 
 // Create new confirmation
 // Accepts multipart/form-data (field "signature" for file)
+// Create new confirmation (no file upload)
 const createConfirmation = (req, res) => {
   const {
     payment_id,
-    sent_by,       // id from admin table (role=client)
-    confirmed_by,  // id from admin table (role=admin)
-    status,        // 'confirmed' or 'rejected' (required)
-    confirmed_at,  // manual datetime string (optional)
-    reject_reason, // optional
+    sent_by,
+    confirmed_by,
+    status,
+    confirmed_at,
+    reject_reason,
   } = req.body;
-
-  const signatureFile = req.file ? req.file.filename : null;
 
   if (!payment_id || !status) {
     return res.status(400).json({ error: "payment_id and status are required" });
   }
 
-  const sql = `
+  const insertSQL = `
     INSERT INTO payment_confirmations
-      (payment_id, sent_by, confirmed_by, status, confirmed_at, signature, reject_reason)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+      (payment_id, sent_by, confirmed_by, status, confirmed_at, reject_reason)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
-  const params = [
+  const insertParams = [
     payment_id,
     sent_by || null,
     confirmed_by || null,
     status,
     confirmed_at || null,
-    signatureFile,
     reject_reason || null,
   ];
 
-  connection.query(sql, params, (err, result) => {
+  connection.query(insertSQL, insertParams, (err, result) => {
     if (err) {
       console.error("createConfirmation error:", err);
       return res.status(500).json({ error: "Insert failed", details: err });
     }
-    return res.status(201).json({ message: "Confirmation created", id: result.insertId });
+
+    const updateSQL = `
+      UPDATE payments
+      SET status = ?, paid_at = ?
+      WHERE id = ?
+    `;
+    connection.query(updateSQL, [status, confirmed_at || new Date(), payment_id], (updateErr) => {
+      if (updateErr) {
+        console.error("update payments error:", updateErr);
+        return res.status(500).json({ error: "Failed to update payment status", details: updateErr });
+      }
+
+      return res.status(201).json({
+        message: status === "rejected" ? "Payment rejected successfully" : "Payment confirmed successfully",
+        confirmation_id: result.insertId,
+        payment_id,
+      });
+    });
   });
 };
 
-// Update confirmation (partial update supported)
-// Accepts multipart/form-data for signature if you want to replace it
+// Update confirmation (no signature)
 const updateConfirmation = (req, res) => {
   const id = req.params.id;
   const {
@@ -86,7 +100,6 @@ const updateConfirmation = (req, res) => {
     confirmed_at,
     reject_reason,
   } = req.body;
-  const signatureFile = req.file ? req.file.filename : null;
 
   const sql = `
     UPDATE payment_confirmations
@@ -96,7 +109,6 @@ const updateConfirmation = (req, res) => {
       confirmed_by  = COALESCE(?, confirmed_by),
       status        = COALESCE(?, status),
       confirmed_at  = COALESCE(?, confirmed_at),
-      signature     = COALESCE(?, signature),
       reject_reason = COALESCE(?, reject_reason),
       updated_at    = NOW()
     WHERE id = ?
@@ -107,7 +119,6 @@ const updateConfirmation = (req, res) => {
     confirmed_by || null,
     status || null,
     confirmed_at || null,
-    signatureFile || null,
     reject_reason || null,
     id,
   ];
@@ -117,10 +128,12 @@ const updateConfirmation = (req, res) => {
       console.error("updateConfirmation error:", err);
       return res.status(500).json({ error: "Update failed", details: err });
     }
-    if (result.affectedRows === 0) return res.status(404).json({ error: "Confirmation not found" });
+    if (result.affectedRows === 0)
+      return res.status(404).json({ error: "Confirmation not found" });
     return res.status(200).json({ message: "Confirmation updated" });
   });
 };
+
 
 // Delete confirmation
 const deleteConfirmation = (req, res) => {
