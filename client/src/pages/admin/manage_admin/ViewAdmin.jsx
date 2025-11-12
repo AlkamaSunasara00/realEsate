@@ -12,6 +12,9 @@ import {
 } from "react-icons/fa";
 import api from "../../../api/axiosInstance";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import DeleteConfirmModal from "../../../components/modals/DeleteConfirmModal";
 
 function ViewAdmin() {
   const { id } = useParams();
@@ -19,6 +22,9 @@ function ViewAdmin() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const user_role = user.role || "";
   const navigate = useNavigate();
+
+  // helper: now in datetime-local format
+  const nowLocalInput = () => new Date().toISOString().slice(0, 16);
 
   const [openProperty, setOpenProperty] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -40,40 +46,43 @@ function ViewAdmin() {
     assigned_by: admin_id || "",
     amount: "",
     details: "",
-    assigned_at: "",
+    assigned_at: nowLocalInput(),
   });
   const [assignedError, setAssignedError] = useState("");
 
   const [paymentForm, setPaymentForm] = useState({
     property_id: "",
-    client_id: "",
+    client_id: id,
     amount: "",
     details: "",
-    payment_method: "",
-    paid_at: "",
+    payment_method: "cash",
+    paid_at: nowLocalInput(),
     created_by: admin_id,
   });
   const [paymenterror, setPaymentError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
 
-  const [markConfirmedAt, setMarkConfirmedAt] = useState("");
+  const [markConfirmedAt, setMarkConfirmedAt] = useState(nowLocalInput());
   const [rejectReason, setRejectReason] = useState("");
   const [markError, setMarkError] = useState("");
   const [confirmationPayments, setConfirmationPayments] = useState({});
 
+  // delete modal state for payments
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTargetPaymentId, setDeleteTargetPaymentId] = useState(null);
+
   const sigCanvas = useRef(null);
   const API_ROOT = "http://localhost:4500";
 
-  // ──────────────────────────────────────────────────────────────
-  // FETCHERS
-  // ──────────────────────────────────────────────────────────────
+  // ───────────────── FETCHERS ─────────────────
   const fetchClientInfo = async () => {
     try {
       const res = await api.get(`/admin/getUserById/${id}`);
       setClientInfo(res.data);
     } catch (error) {
       console.error("fetchClientInfo", error);
+      toast.error("Failed to load client info");
     }
   };
 
@@ -83,6 +92,7 @@ function ViewAdmin() {
       setPropertId(res.data || []);
     } catch (error) {
       console.error("fetchClientAssignProperties", error);
+      toast.error("Failed to load assigned properties");
     }
   };
 
@@ -93,6 +103,7 @@ function ViewAdmin() {
       setProperties(available);
     } catch (error) {
       console.error("assignProperties", error);
+      // toast.error("Failed to load properties");
     }
   };
 
@@ -102,13 +113,14 @@ function ViewAdmin() {
       setClientPayments(res.data || []);
     } catch (error) {
       console.error("getClientPayments", error);
+      toast.error("Failed to load payments");
     }
   };
 
   const fetchConfirmationByPaymentId = async (paymentId) => {
     try {
       const res = await api.get(`${API_ROOT}/getConfirmationByPaymentId/${paymentId}`);
-      const data = res.data[0];
+      const data = res.data && res.data[0];
       setConfirmationPayments(prev => ({ ...prev, [paymentId]: data }));
     } catch (error) {
       console.error("fetchConfirmationByPaymentId", error);
@@ -120,6 +132,7 @@ function ViewAdmin() {
     fetchClientAssignProperties();
     assignProperties();
     getClientPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -128,16 +141,19 @@ function ViewAdmin() {
         setPropertiesDetail([]);
         return;
       }
-      const requests = propertId.map(p => api.get(`${API_ROOT}/getproperties/${p.property_id}`));
-      const responses = await Promise.all(requests);
-      setPropertiesDetail(responses.map(r => r.data));
+      try {
+        const requests = propertId.map(p => api.get(`${API_ROOT}/getproperties/${p.property_id}`));
+        const responses = await Promise.all(requests);
+        setPropertiesDetail(responses.map(r => r.data));
+      } catch (err) {
+        console.error(err);
+        // toast.error("Failed to load property details");
+      }
     };
     fetchPropertiesById();
   }, [propertId]);
 
-  // ──────────────────────────────────────────────────────────────
-  // HANDLERS
-  // ──────────────────────────────────────────────────────────────
+  // ───────────────── HANDLERS ─────────────────
   const handleAssignProperty = (e) => setAssignedForm({ ...assignedForm, [e.target.name]: e.target.value });
 
   const handleAssignPropertySubmit = async (e) => {
@@ -155,13 +171,15 @@ function ViewAdmin() {
         details: assignedForm.details || null,
         assigned_at: assignedForm.assigned_at || null,
       });
-      alert("Property assigned successfully");
+      toast.success("Property assigned successfully");
       await fetchClientAssignProperties();
       await assignProperties();
       setShowSaleModal(false);
-      setAssignedForm({ property_id: "", client_id: id, assigned_by: admin_id, amount: "", details: "", assigned_at: "" });
+      setAssignedForm({ property_id: "", client_id: id, assigned_by: admin_id, amount: "", details: "", assigned_at: nowLocalInput() });
     } catch (err) {
+      console.error(err);
       setAssignedError("Failed to assign property");
+      toast.error("Failed to assign property");
     }
   };
 
@@ -179,8 +197,8 @@ function ViewAdmin() {
       client_id: id,
       amount: "",
       details: "",
-      payment_method: "",
-      paid_at: "",
+      payment_method: "cash",
+      paid_at: nowLocalInput(),
       created_by: admin_id,
     });
     setShowPaymentModal(true);
@@ -196,7 +214,7 @@ function ViewAdmin() {
       client_id: pay.client_id || id,
       amount: pay.amount,
       payment_method: pay.payment_method,
-      paid_at: pay.paid_at ? pay.paid_at.replace(" ", "T").slice(0, 16) : "",
+      paid_at: pay.paid_at ? pay.paid_at.replace(" ", "T").slice(0, 16) : nowLocalInput(),
       details: pay.notes || "",
     });
     setShowPaymentModal(true);
@@ -211,16 +229,18 @@ function ViewAdmin() {
         client_id: Number(paymentForm.client_id),
         amount: paymentForm.amount || null,
         payment_method: paymentForm.payment_method || "cash",
-        paid_at: paymentForm.paid_at || new Date().toISOString(),
+        paid_at: paymentForm.paid_at ? new Date(paymentForm.paid_at).toISOString() : new Date().toISOString(),
         notes: paymentForm.details || null,
         status: "pending",
         created_by: admin_id,
       });
-      alert("Payment added successfully");
+      toast.success("Payment added successfully");
       await getClientPayments();
       closePaymentModal();
     } catch (err) {
+      console.error(err);
       setPaymentError("Failed to add payment");
+      toast.error("Failed to add payment");
     }
   };
 
@@ -237,11 +257,12 @@ function ViewAdmin() {
         notes: paymentForm.details || null,
         paid_at: paymentForm.paid_at ? paymentForm.paid_at.replace("T", " ") : null,
       });
-      alert("Payment updated successfully");
+      toast.success("Payment updated successfully");
       await getClientPayments();
       closePaymentModal();
     } catch (err) {
-      alert("Failed to update payment");
+      console.error(err);
+      toast.error("Failed to update payment");
     }
   };
 
@@ -250,7 +271,7 @@ function ViewAdmin() {
     setIsEditing(false);
     setEditingPayment(null);
     setPaymentError("");
-    setPaymentForm({ property_id: "", client_id: "", amount: "", details: "", payment_method: "", paid_at: "" });
+    setPaymentForm({ property_id: "", client_id: "", amount: "", details: "", payment_method: "cash", paid_at: nowLocalInput() });
   };
 
   const toggleProperty = (id) => setOpenProperty(openProperty === id ? null : id);
@@ -260,7 +281,7 @@ function ViewAdmin() {
     setSelectedPayment(payment);
     const prop = propertiesDetail.find(p => p.id === payment.property_id) || null;
     setSelectedProperty(prop);
-    const now = new Date().toISOString().slice(0, 16);
+    const now = nowLocalInput();
     setMarkConfirmedAt(now);
     setRejectReason("");
     setShowRejectComment(false);
@@ -283,6 +304,7 @@ function ViewAdmin() {
     setMarkError("");
     if (!selectedPayment || sigCanvas.current.isEmpty()) {
       setMarkError("Signature required");
+      toast.error("Signature required");
       return;
     }
     try {
@@ -302,13 +324,15 @@ function ViewAdmin() {
         status: "completed",
         paid_at: markConfirmedAt.replace("T", " "),
       });
-      alert("Payment confirmed & marked paid");
+      toast.success("Payment confirmed & marked paid");
       setShowMarkPaidModal(false);
       sigCanvas.current.clear();
       setSelectedPayment(null);
       await getClientPayments();
     } catch (err) {
+      console.error(err);
       setMarkError("Failed to confirm payment");
+      toast.error("Failed to confirm payment");
     }
   };
 
@@ -316,6 +340,7 @@ function ViewAdmin() {
     setMarkError("");
     if (!selectedPayment || !rejectReason.trim()) {
       setMarkError("Rejection reason required");
+      toast.error("Rejection reason required");
       return;
     }
     try {
@@ -330,31 +355,46 @@ function ViewAdmin() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       await api.put(`${API_ROOT}/updatepayment/${selectedPayment.id}`, { status: "rejected" });
-      alert("Payment rejected");
+      toast.success("Payment rejected");
       setShowMarkPaidModal(false);
       setShowRejectComment(false);
       sigCanvas.current.clear();
       setSelectedPayment(null);
       await getClientPayments();
     } catch (err) {
+      console.error(err);
       setMarkError("Failed to submit rejection");
+      toast.error("Failed to submit rejection");
     }
   };
 
-  const handleUpdatePaymentStatus = async (paymentId) => {
-    if (!window.confirm("Delete this payment?")) return;
+  // Replace old confirm() delete with modal flow:
+  const openDeleteModal = (paymentId, e) => {
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+    setDeleteTargetPaymentId(paymentId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeletePayment = async () => {
+    const paymentId = deleteTargetPaymentId;
+    if (!paymentId) {
+      toast.error("No payment selected");
+      setDeleteModalOpen(false);
+      return;
+    }
     try {
       await api.put(`${API_ROOT}/updatePaymentStatus/${paymentId}`, { status: "deleted" });
-      alert("Payment deleted");
+      toast.success("Payment deleted");
+      setDeleteModalOpen(false);
+      setDeleteTargetPaymentId(null);
       await getClientPayments();
     } catch (error) {
-      alert("Failed to delete");
+      console.error("Failed to delete payment", error);
+      toast.error("Failed to delete payment");
     }
   };
 
-  // ──────────────────────────────────────────────────────────────
-  // NEW: Download Invoice
-  // ──────────────────────────────────────────────────────────────
+  // Download invoice helper
   const handleDownloadInvoice = async (paymentId) => {
     try {
       const { data } = await api.get(`${API_ROOT}/generateInvoice/${paymentId}`, {
@@ -366,14 +406,14 @@ function ViewAdmin() {
       a.download = `invoice_${paymentId}.pdf`;
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch {
-      alert("Failed to download invoice");
+      toast.success("Invoice downloaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download invoice");
     }
   };
 
-  // ──────────────────────────────────────────────────────────────
-  // RENDER
-  // ──────────────────────────────────────────────────────────────
+  // ───────────────── RENDER ─────────────────
   return (
     <>
       <div className="client-section">
@@ -461,7 +501,9 @@ function ViewAdmin() {
                         </thead>
                         <tbody>
                           {clientPayments.filter(pay => pay.property_id === p.id).length > 0 ? (
-                            clientPayments.filter(pay => pay.property_id === p.id).map((pay, idx) => (
+                            clientPayments.filter(pay => pay.property_id === p.id).map((pay, idx) => {
+                              const confirm = confirmationPayments?.[pay.id];
+                              return (
                               <tr key={pay.id} onClick={() => fetchConfirmationByPaymentId(pay.id)}>
                                 <td data-label="S.No">{idx + 1}</td>
                                 <td data-label="Amount">₹{Number(pay.amount).toLocaleString()}</td>
@@ -481,14 +523,13 @@ function ViewAdmin() {
                                   </span>
                                 </td>
                                 <td data-label="Payment Date">
-                                  {pay.paid_at ? new Date(pay.paid_at).toLocaleDateString("en-IN") : "—"}
+                                  {pay.paid_at ? new Date(pay.paid_at).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN")}
                                 </td>
                                 <td data-label="Actions" onClick={(e) => e.stopPropagation()}>
                                   {pay.status === "deleted" ? null : (
                                     pay.status === "completed" || pay.status === "rejected" ? (
                                       user_role === "admin" ? (
                                         <div style={{ display: "flex", gap: 6 }}>
-                                          {/* Download Button */}
                                           {pay.status === "completed" && (
                                             <button
                                               className="client-download-btn"
@@ -500,7 +541,8 @@ function ViewAdmin() {
                                           )}
                                           <button
                                             className="client-delete-btn"
-                                            onClick={() => handleUpdatePaymentStatus(pay.id)}
+                                            onClick={(e) => openDeleteModal(pay.id, e)}
+                                            title="Delete"
                                           >
                                             <FaTrashAlt />
                                           </button>
@@ -530,7 +572,8 @@ function ViewAdmin() {
                                   )}
                                 </td>
                               </tr>
-                            ))
+                              );
+                            })
                           ) : (
                             <tr><td colSpan={5} className="empty-state">No payments for this property</td></tr>
                           )}
@@ -545,7 +588,7 @@ function ViewAdmin() {
         </div>
       </div>
 
-      {/* ──────── SALE MODAL ──────── */}
+      {/* SALE MODAL */}
       {showSaleModal && (
         <div className="payment-modal-overlay">
           <div className="payment-modal better-modal mark-paid-modal">
@@ -569,7 +612,7 @@ function ViewAdmin() {
         </div>
       )}
 
-      {/* ──────── PAYMENT MODAL ──────── */}
+      {/* PAYMENT MODAL */}
       {showPaymentModal && (
         <div className="payment-modal-overlay">
           <div className="payment-modal better-modal mark-paid-modal">
@@ -606,7 +649,7 @@ function ViewAdmin() {
         </div>
       )}
 
-      {/* ──────── MARK PAID / REJECT MODAL ──────── */}
+      {/* MARK PAID / REJECT MODAL */}
       {showMarkPaidModal && (
         <div className="payment-modal-overlay">
           <div className="payment-modal better-modal mark-paid-modal">
@@ -658,6 +701,16 @@ function ViewAdmin() {
           </div>
         </div>
       )}
+
+      {/* Payment delete confirmation modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => { setDeleteModalOpen(false); setDeleteTargetPaymentId(null); }}
+        onConfirm={confirmDeletePayment}
+      />
+
+      {/* Toast container */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar theme="colored" />
     </>
   );
 }

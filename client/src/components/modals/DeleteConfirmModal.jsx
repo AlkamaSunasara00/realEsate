@@ -28,7 +28,6 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
     <div className="payment-modal-overlay">
       <div className="payment-modal">
         <h3>Confirm Delete</h3>
-        <button className="payment-close-btn" onClick={onClose}>×</button>
 
         <p>Enter this code to confirm:</p>
 
@@ -59,7 +58,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           }}
         />
 
-        <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 10 }}>
+        <div style={{ marginTop: 12, display: "flex", justifyContent: "space-around", gap: 10 }}>
           <button className="payment-cancel" onClick={onClose}>Cancel</button>
           <button className="payment-save" onClick={handleDelete}>Confirm Delete</button>
         </div>
