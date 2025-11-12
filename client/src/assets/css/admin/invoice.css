@@ -1,100 +1,449 @@
+/* ====================== INVOICE MODAL – BLUE & PROFESSIONAL ====================== */
 .invoice-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  animation: fadeIn 0.3s ease;
 }
 
 .invoice-modal {
-  background: #fff;
-  border-radius: 14px;
-  padding: 20px;
-  width: 480px;
-  max-height: 90vh;
+  position: relative;
+  background: #ffffff;
+  border-radius: 18px;
+  width: 520px;
+  max-width: 95vw;
+  max-height: 92vh;
   overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 25px 70px rgba(79, 110, 247, 0.2);
+  border: 1px solid #e0e7ff;
+  font-family: "Inter", sans-serif;
+  animation: slideUp 0.4s ease;
 }
 
-.invoice-header {
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ====================== COMPANY HEADER ====================== */
+.invoice-company-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  align-items: flex-start;
+  padding: 24px 28px 20px;
+  background: linear-gradient(135deg, #4f6ef7, #3b82f6);
+  color: white;
+  border-radius: 18px 18px 0 0;
+  position: relative;
 }
 
-.close-btn {
-  border: none;
-  background: none;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.invoice-body {
+.company-info {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 14px;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-placeholder {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+}
+
+.company-info h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.company-info p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.invoice-meta h2 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.invoice-id {
+  margin: 6px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* ====================== CONTENT ====================== */
+.invoice-content {
+  padding: 28px;
+  background: #f8faff;
+  border-radius: 0 0 18px 18px;
+}
+
+.invoice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
   margin-bottom: 20px;
 }
 
-.invoice-row strong {
-  width: 120px;
-  display: inline-block;
+.invoice-section h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #4f6ef7;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.client-name,
+.property-title {
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  font-size: 15px;
+}
+
+.client-contact,
+.property-address {
+  font-size: 14px;
+  color: #64748b;
+  margin: 3px 0;
+  line-height: 1.4;
+}
+
+/* ====================== DETAILS ====================== */
+.invoice-details {
+  background: white;
+  border: 1.5px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.detail-row span {
+  color: #475569;
+  font-weight: 500;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.amount {
+  font-weight: 800;
+  color: #1e293b;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.datetime-input {
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  width: 100%;
+  max-width: 220px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.datetime-input:focus {
+  outline: none;
+  border-color: #4f6ef7;
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.15);
+}
+
+/* ====================== SIGNATURE ====================== */
+.signature-section {
+  margin-bottom: 24px;
+}
+
+.signature-section label {
+  display: block;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.signature-pad-wrapper {
+  position: relative;
+  border: 2px dashed #a5b4fc;
+  border-radius: 14px;
+  background: #eef2ff;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(79, 110, 247, 0.08);
 }
 
 .signature-canvas {
-  border: 1px solid #ccc;
   width: 100%;
-  height: 120px;
-  border-radius: 8px;
-  margin-top: 5px;
+  height: 180px; /* Increased for mobile */
 }
 
-.signature-clear {
-  margin-top: 6px;
-  font-size: 12px;
-  border: none;
-  background: #f87171;
-  color: #fff;
-  border-radius: 6px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.invoice-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.confirm-btn {
-  background: #22c55e;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.reject-btn {
+.clear-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
   background: #ef4444;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.clear-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ====================== ACTIONS ====================== */
+.invoice-actions,
+.reject-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.reject-btn,
+.back-btn,
+.submit-reject-btn,
+.confirm-btn {
+  flex: 1;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+}
+
+.reject-btn,
+.submit-reject-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.reject-btn:hover,
+.submit-reject-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.back-btn {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.back-btn:hover {
+  background: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* ====================== REJECT SECTION ====================== */
+.reject-section h4 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #dc2626;
 }
 
 .reject-textarea {
   width: 100%;
-  height: 100px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  padding: 8px;
-  margin-bottom: 10px;
+  height: 110px;
+  border: 1.5px solid #fecaca;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
   resize: none;
+  background: #fef2f2;
+  color: #991b1b;
+  font-family: inherit;
+}
+
+.reject-textarea::placeholder {
+  color: #f87171;
+}
+
+.reject-textarea:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* ====================== CLOSE BUTTON ====================== */
+.invoice-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #1e293b;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.invoice-close:hover {
+  background: #0f172a;
+  transform: scale(1.05);
+}
+/* ====================== RESPONSIVE ====================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .invoice-modal {
+    width: 92vw;
+    border-radius: 16px;
+  }
+
+  .invoice-company-header {
+    padding: 20px 22px;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .invoice-meta {
+    align-self: flex-end;
+  }
+
+  .invoice-content {
+    padding: 22px;
+  }
+
+  .invoice-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .signature-canvas {
+    height: 160px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .invoice-modal {
+    width: 96vw;
+    max-height: 94vh;
+    border-radius: 14px;
+  }
+
+  .invoice-company-header {
+    padding: 18px 18px 16px;
+  }
+
+  .company-info h3 {
+    font-size: 16px;
+  }
+
+  .invoice-meta h2 {
+    font-size: 28px;
+  }
+
+  .invoice-content {
+    padding: 18px;
+  }
+
+  .invoice-grid {
+    gap: 16px;
+  }
+
+  .detail-row {
+    font-size: 14px;
+  }
+
+  .amount {
+    font-size: 17px;
+  }
+
+  .signature-canvas {
+    height: 180px !important; /* Extended for mobile */
+  }
+
+  .clear-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .invoice-actions,
+  .reject-actions {
+    flex-direction: column;
+  }
+
+  .confirm-btn,
+  .reject-btn,
+  .back-btn,
+  .submit-reject-btn {
+    padding: 13px;
+    font-size: 14px;
+  }
+
+  .invoice-close {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+    top: 12px;
+    right: 12px;
+  }
 }

@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────
-   VIEW ADMIN - CLEANED & OPTIMIZED
+   VIEW ADMIN - CLEANED & OPTIMIZED (updated with reject reason)
    ────────────────────────────────────────────────────────────── */
 * {
   font-family: "Inter", sans-serif;
@@ -12,13 +12,11 @@
   min-height: 100vh;
   color: #1e293b;
 }
-
 .view-admin-header {
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #e2e8f0;
 }
-
 .header-top {
   display: flex;
   justify-content: space-between;
@@ -26,7 +24,6 @@
   gap: 12px;
   margin-bottom: 8px;
 }
-
 .header-back-btn,
 .client-add-sale-btn {
   padding: 10px 16px;
@@ -36,29 +33,24 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .header-back-btn {
   border: 1px solid #e2e8f0;
   background: white;
   color: #1e293b;
 }
-
 .header-back-btn:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
-
 .client-add-sale-btn {
   background: linear-gradient(135deg, #4f6ef7, #3b82f6);
   color: white;
   border: none;
   box-shadow: 0 4px 15px rgba(59,130,246,0.3);
 }
-
 .client-add-sale-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(59,130,246,0.4);
 }
-
 .client-title {
   font-size: 26px;
   font-weight: 700;
@@ -75,7 +67,6 @@
   gap: 24px;
   margin-top: 20px;
 }
-
 .client-sidebar {
   width: 400px;
   flex-shrink: 0;
@@ -83,7 +74,6 @@
   flex-direction: column;
   gap: 16px;
 }
-
 .client-card {
   background: white;
   border-radius: 14px;
@@ -92,17 +82,14 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   transition: all 0.2s;
 }
-
 .client-card:hover {
   box-shadow: 0 8px 25px rgba(0,0,0,0.08);
   transform: translateY(-2px);
 }
-
 .client-name { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
 .client-subtext { font-size: 14px; color: #64748b; margin-bottom: 12px; font-weight: 500; }
 .client-contact-row { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #475569; margin-bottom: 15px; }
 .client-contact-row svg { color: #4f6ef7; font-size: 18px; flex-shrink: 0; }
-
 .client-property-list { list-style: none; padding: 0; margin: 0; }
 .client-property-list li { padding: 10px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; color: #475569; }
 .client-property-list li:last-child { border-bottom: none; }
@@ -122,14 +109,12 @@
   cursor: pointer;
   transition: all 0.3s;
 }
-
 .client-property-sale:hover {
   border-color: #4f6ef7;
   background: #f8faff;
   box-shadow: 0 6px 18px rgba(79,110,247,0.12);
   transform: translateY(-3px);
 }
-
 .client-property-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
 .client-property-name { font-weight: 700; font-size: 17px; color: #1e293b; }
 .client-property-date { font-size: 13px; color: #94a3b8; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; }
@@ -137,16 +122,15 @@
 .client-sale-plan { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 14px; color: #64748b; }
 .client-sale-note { flex: 1; margin: 0; line-height: 1.5; }
 .client-sale-plan svg { color: #4f6ef7; font-size: 18px; }
-
 .client-transaction-box { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #cbd5e1; }
 .client-transaction-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .client-transaction-header h5 { margin: 0; font-size: 16px; font-weight: 600; color: #1e293b; }
 
+/* Table */
 .client-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
 .client-table th { text-align: left; padding: 10px 8px; font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-.client-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; color: #475569; }
+.client-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; color: #475569; vertical-align: top; }
 .client-table tr:hover { background: #f8faff; }
-
 .client-badge {
   padding: 4px 10px;
   border-radius: 20px;
@@ -163,6 +147,7 @@
   justify-content: flex-start;
 }
 
+/* lighten download & delete buttons (requested) */
 .client-download-btn,
 .client-delete-btn {
   width: 36px;
@@ -174,26 +159,26 @@
   justify-content: center;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
+/* light download style */
 .client-download-btn {
-  background: #4f46e5;
-  color: white;
+  background: #e0e7ff; /* light blue */
+  color: #3730a3;      /* indigo text */
 }
-
 .client-download-btn:hover {
-  background: #4338ca;
+  background: #c7d2fe;
   transform: translateY(-1px);
 }
 
+/* light delete style */
 .client-delete-btn {
-  background: #ef4444;
-  color: white;
+  background: #fff1f2; /* light pink */
+  color: #b91c1c;      /* darker red text */
 }
-
 .client-delete-btn:hover {
-  background: #dc2626;
+  background: #ffe4e6;
   transform: translateY(-1px);
 }
 
@@ -208,7 +193,6 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .client-add-payment-btn { background: linear-gradient(135deg, #4f6ef7, #3b82f6); color: white; }
 .client-mark-paid-btn { background: #22c55e; color: white; }
 .client-edit-btn { background: #f97316; color: white; }
@@ -224,7 +208,6 @@
   align-items: center;
   z-index: 1000;
 }
-
 .payment-modal {
   background: white;
   width: 480px;
@@ -235,16 +218,13 @@
   max-height: 90vh;
   overflow-y: auto;
 }
-
 .payment-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
-
 .payment-modal-header h3 { margin: 0; font-size: 22px; font-weight: 700; color: #1e293b; }
-
 .payment-close-btn {
   background: #e2e8f0;
   color: #64748b;
@@ -256,7 +236,6 @@
   cursor: pointer;
   transition: 0.2s;
 }
-
 .payment-close-btn:hover { background: #cbd5e1; color: #1e293b; }
 
 .payment-input,
@@ -270,7 +249,6 @@ select {
   font-size: 15px;
   transition: all 0.2s;
 }
-
 .payment-input:focus,
 .payment-textarea:focus,
 select:focus {
@@ -278,30 +256,87 @@ select:focus {
   border-color: #4f6ef7;
   box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
 }
-
 .payment-input[readonly] { background: #f8fafc; color: #64748b; cursor: not-allowed; }
-
 .payment-textarea { height: 100px; resize: none; }
-
 label { font-weight: 600; color: #475569; font-size: 14px; margin-bottom: 4px; display: block; }
-
 .signature-pad { width: 100%; height: 180px; border: 2px dashed #cbd5e1; border-radius: 12px; background: #f8fafc; margin: 12px 0; }
 .signature-clear-btn { background: #ef4444; color: white; padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; }
-
 .payment-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
 }
-
 .payment-cancel { background: #e2e8f0; color: #475569; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
 .payment-save { background: #22c55e; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 .reject-btn, .reject-submit-btn { background: #ef4444 !important; }
-
 .error-text { color: #dc2626; margin: 0 0 12px; font-weight: 500; }
 
-/* Responsive */
+/* ---------- Reject reason boxed area (desktop + responsive) ---------- */
+.reject-row td {
+  background: transparent !important;
+  padding: 8px 12px !important;
+  border: none;
+}
+
+/* Outer dashed border container that discriminates the reject block */
+.reject-container {
+  border: 1.5px dashed #fca5a5;    /* dashed border to set it apart */
+  background: #fff7f7;             /* subtle pink-ish bg */
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  box-shadow: 0 2px 6px rgba(249, 205, 212, 0.25);
+}
+
+/* left label */
+.reject-label {
+  font-weight: 700;
+  color: #991b1b;
+  min-width: 140px;
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* actual reason box — wraps, keeps max-height and scrolls if it's too long */
+.reject-text-box {
+  background: #fff1f2;
+  color: #58151a;
+  padding: 10px 12px;
+  border-radius: 8px;
+  flex: 1 1 auto;
+  max-height: 120px;        /* limit height so it won't push layout */
+  overflow: auto;           /* scroll when content overflows */
+  word-break: break-word;   /* break long words/urls */
+  white-space: pre-wrap;    /* preserve newlines and wrap */
+  line-height: 1.35;
+  font-size: 14px;
+  border: 1px solid rgba(185, 28, 28, 0.06);
+}
+
+/* tiny scroll style (optional) */
+.reject-text-box::-webkit-scrollbar { height: 8px; width: 8px; }
+.reject-text-box::-webkit-scrollbar-thumb { background: rgba(153,27,27,0.18); border-radius: 8px; }
+
+/* Responsive: on small screens stack label above reason, keep the same scrolling behavior */
+@media (max-width: 900px) {
+  .reject-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .reject-label {
+    min-width: 0;
+    font-size: 13px;
+  }
+  .reject-text-box {
+    max-height: 140px; /* allow a little more height on narrow screens */
+  }
+}
+
+/* Extra small mobile tweak */
 @media (max-width: 640px) {
   .client-layout { flex-direction: column; gap: 16px; }
   .client-sidebar { width: 100%; }
@@ -315,12 +350,17 @@ label { font-weight: 600; color: #475569; font-size: 14px; margin-bottom: 4px; d
   .payment-modal { padding: 20px; margin: 16px; }
   .payment-modal-actions { flex-direction: column-reverse; }
   .payment-modal-actions button { width: 100%; }
-}
 
+  .reject-text-box {
+    font-size: 13px;
+    padding: 8px 10px;
+    max-height: 160px;
+  }
+}
 
 @media (max-width: 396px){
-.client-transaction-header {
-  display: grid;
-  grid-column-start:auto;
-}
+  .client-transaction-header {
+    display: grid;
+    grid-column-start:auto;
+  }
 }
