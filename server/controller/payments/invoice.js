@@ -26,7 +26,7 @@ const generateInvoicePdf = (req, res) => {
 
   const invoiceFileName = `invoice_${payment_id}.pdf`;
   const invoicePath = path.join(invoiceDir, invoiceFileName);
-  const relativePath = `/uploads/invoices/${invoiceFileName}`;
+  const relativePath = `${invoiceFileName}`;
 
   const doc = new PDFDocument({ margin: 50 });
   const stream = fs.createWriteStream(invoicePath);
@@ -167,9 +167,13 @@ const getInvoicePath = (req, res) => {
 // 🧾 Download invoice
 const downloadInvoice = (req, res) => {
   const invoiceId = req.params.id;
-  const invoicePath = path.join(__dirname, "../../client/public/uploads/invoices", `invoice_${invoiceId}.pdf`);
+
+  // jump 3 levels up from controllers/payment/
+  const projectRoot = path.resolve(__dirname, "../../..");
+  const invoicePath = path.join(projectRoot, "client/public/uploads/invoices", `invoice_${invoiceId}.pdf`);
 
   if (!fs.existsSync(invoicePath)) {
+    console.error("Invoice not found at:", invoicePath);
     return res.status(404).json({ error: "Invoice not found" });
   }
 
