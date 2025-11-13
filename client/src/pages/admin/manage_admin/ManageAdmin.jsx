@@ -18,7 +18,9 @@ const ManageAdmin = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [admins, setAdmins] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
+  const [isTablet, setIsTablet] = useState(
+    window.innerWidth >= 768 && window.innerWidth < 1024
+  );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // modal states
@@ -29,12 +31,12 @@ const ManageAdmin = () => {
 
   const navigate = useNavigate();
 
+  // Fetch clients
   useEffect(() => {
     const fetchClients = async () => {
       try {
         const res = await api.get("/admin/clients");
         setAdmins(res.data || []);
-        console.log(res.data)
       } catch (error) {
         console.error(error);
         toast.error("Failed to load admins");
@@ -43,96 +45,89 @@ const ManageAdmin = () => {
     fetchClients();
   }, []);
 
-  // responsive listener
+  // Responsive listener
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       setIsMobile(width < 768);
       setIsTablet(width >= 768 && width < 1024);
 
-      if (width < 1024) {
-        setIsSidebarOpen(false);
-      }
+      if (width < 1024) setIsSidebarOpen(false);
     };
     window.addEventListener("resize", handleResize);
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Filter based on tab
   const filtered = admins.filter((a) =>
     activeTab === "All"
-      ? a.trash === "0" // only non-deleted users
+      ? a.trash === "0"
       : activeTab === "Trash"
-        ? a.trash === "1" // only trashed users
-        : true
+      ? a.trash === "1"
+      : true
   );
-
 
   const toggleSidebar = () => setIsSidebarOpen((v) => !v);
 
-  // open delete modal (use this instead of window.confirm)
+  // open delete modal
   const openDeleteModal = (admin) => {
     setSelectedToDelete(admin);
     setDeleteModalOpen(true);
   };
 
-  // called when DeleteConfirmModal verifies code and triggers onConfirm
-  const handleConfirmDelete = async () => {
-    if (!selectedToDelete) {
-      toast.error("No admin selected to delete");
-      setDeleteModalOpen(false);
-      return;
-    }
+  // Confirm delete -> trash user
+ const handleConfirmDelete = async () => {
+  if (!selectedToDelete) {
+    toast.error("No admin selected");
+    setDeleteModalOpen(false);
+    return;
+  }
 
-    setIsDeleting(true);
-    try {
-      await api.delete(`/admin/delete-client/${selectedToDelete.id}`);
-      // remove from local state
-      setAdmins((prev) => prev.filter((a) => a.id !== selectedToDelete.id));
-      // close modals & clear selection
-      setDeleteModalOpen(false);
-      if (selectedAdmin?.id === selectedToDelete.id) setSelectedAdmin(null);
-      setSelectedToDelete(null);
-      toast.success("Admin deleted successfully ✅");
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("Failed to delete admin ❌");
-      setDeleteModalOpen(false);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  setIsDeleting(true);
 
+  try {
+    await api.put(`/admin/trash-client/${selectedToDelete.id}`, {
+      trash: "1",
+    });
 
-  const handleTrashClient = async (id) => {
-    try {
-      const res = await api.put(`/admin/trash-client/${id}`, { trash: '1' });
-      alert("done")
-      // refresh list or remove item from state
-    } catch (err) {
-      console.error("trash client error", err);
-      alert("Failed to trash client");
-    }
-  };
+    // 🔥 Update local state instead of removing
+    setAdmins((prev) =>
+      prev.map((a) =>
+        a.id === selectedToDelete.id ? { ...a, trash: "1" } : a
+      )
+    );
+
+    setDeleteModalOpen(false);
+    if (selectedAdmin?.id === selectedToDelete.id)
+      setSelectedAdmin(null);
+
+    setSelectedToDelete(null);
+
+    toast.success("Admin moved to trash 🗑️");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to trash admin ❌");
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
 
-  // show detail modal for desktop
   const openDetailModal = (admin) => {
     setSelectedAdmin(admin);
   };
 
-  // close detail modal
   const closeDetailModal = () => setSelectedAdmin(null);
 
   return (
     <>
-      {/* Sidebar / Navbar optional - commented out if not used */}
-      {/* <Sidebar admin={{}} isMobile={isMobile} isTablet={isTablet} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} /> */}
-      {/* <Navbar /> */}
-
       <main
-        className={`admin-panel-header-div ${isMobile ? "mobile-view" : ""} ${isTablet ? "tablet-view" : ""} ${isSidebarOpen ? "sidebar-open" : ""
-          }`}
+        className={`admin-panel-header-div ${
+          isMobile ? "mobile-view" : ""
+        } ${isTablet ? "tablet-view" : ""} ${
+          isSidebarOpen ? "sidebar-open" : ""
+        }`}
       >
         <Breadcrumb
           title="Clients"
@@ -144,24 +139,27 @@ const ManageAdmin = () => {
 
         <div className="admin-panel-header-tabs">
           <button
-            className={`admin-panel-header-tab ${activeTab === "All" ? "active" : ""}`}
+            className={`admin-panel-header-tab ${
+              activeTab === "All" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("All")}
           >
             All
           </button>
 
           <button
-            className={`admin-panel-header-tab ${activeTab === "Trash" ? "active" : ""}`}
+            className={`admin-panel-header-tab ${
+              activeTab === "Trash" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("Trash")}
           >
             Trash
           </button>
         </div>
 
-
         {/* Desktop Table */}
         {!isMobile && !isTablet && (
-          <div className={`dashboard-table-container`}>
+          <div className="dashboard-table-container">
             <table>
               <thead>
                 <tr>
@@ -179,7 +177,10 @@ const ManageAdmin = () => {
                   filtered.map((a) => (
                     <tr key={a.id}>
                       <td className="product-info admin-profile">
-                        <img src={`/uploads/${a.img}`} alt={`${a.name} profile`} />
+                        <img
+                          src={`/uploads/${a.img}`}
+                          alt={`${a.name} profile`}
+                        />
                         <div className="admin-info-mobile">
                           <span>{a.name}</span>
                         </div>
@@ -187,19 +188,57 @@ const ManageAdmin = () => {
                       <td className="admin-email">{a.email}</td>
                       <td className="admin-phone">{a.number}</td>
                       <td className="admin-status">
-                        <span className={`status ${a.status === "active" ? "published" : "out-of-stock"}`}>{a.status}</span>
+                        <span
+                          className={`status ${
+                            a.status === "active"
+                              ? "published"
+                              : "out-of-stock"
+                          }`}
+                        >
+                          {a.status}
+                        </span>
                       </td>
-                      <td className="admin-added">{a.createdat?.slice(0, 10)}</td>
+                      <td className="admin-added">
+                        {a.createdat?.slice(0, 10)}
+                      </td>
+
                       <td className="actions admin-actions">
-                        <FaRegEye onClick={() => navigate(`/admin/view-admin/${a.id}`)} style={{ cursor: "pointer", marginRight: 8 }} />
-                        <IoPencil onClick={() => navigate(`/admin/edit-admin/${a.id}`)} className="edit-btn" title="Edit Client" style={{ cursor: "pointer", marginRight: 8 }} />
-                        <MdDeleteForever onClick={() => handleTrashClient(a.id)} className="delete-btn" title="Delete Client" style={{ cursor: "pointer" }} />
+                        <FaRegEye
+                          onClick={() =>
+                            navigate(`/admin/view-admin/${a.id}`)
+                          }
+                          style={{ cursor: "pointer", marginRight: 8 }}
+                        />
+
+                        <IoPencil
+                          onClick={() =>
+                            navigate(`/admin/edit-admin/${a.id}`)
+                          }
+                          className="edit-btn"
+                          title="Edit Client"
+                          style={{ cursor: "pointer", marginRight: 8 }}
+                        />
+
+                        {/* FIXED → DELETE OPENS MODAL */}
+                        <MdDeleteForever
+                          onClick={() => openDeleteModal(a)}
+                          className="delete-btn"
+                          title="Delete Client"
+                          style={{ cursor: "pointer" }}
+                        />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: "40px", opacity: 0.6 }}>
+                    <td
+                      colSpan={6}
+                      style={{
+                        textAlign: "center",
+                        padding: "40px",
+                        opacity: 0.6,
+                      }}
+                    >
                       No admins found
                     </td>
                   </tr>
@@ -221,7 +260,8 @@ const ManageAdmin = () => {
                   tabIndex={0}
                   onClick={() => navigate(`/admin/client/${a.id}`)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") navigate(`/admin/client/${a.id}`);
+                    if (e.key === "Enter")
+                      navigate(`/admin/client/${a.id}`);
                   }}
                 >
                   <div className="card-left">
@@ -234,7 +274,15 @@ const ManageAdmin = () => {
                   </div>
 
                   <div className="card-right">
-                    <div className={`count-pill ${a.status === "active" ? "published" : "out-of-stock"}`}>{a.status}</div>
+                    <div
+                      className={`count-pill ${
+                        a.status === "active"
+                          ? "published"
+                          : "out-of-stock"
+                      }`}
+                    >
+                      {a.status}
+                    </div>
                   </div>
                 </article>
               ))
@@ -244,13 +292,22 @@ const ManageAdmin = () => {
           </div>
         )}
 
-        {/* Detail modal (desktop) */}
+        {/* Detail modal */}
         {selectedAdmin && (
-          <div className="detail-modal-overlay" onClick={closeDetailModal}>
-            <div className="detail-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="detail-modal-overlay"
+            onClick={closeDetailModal}
+          >
+            <div
+              className="detail-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="detail-modal-header">
                 <div className="header-left">
-                  <img src={`/uploads/${selectedAdmin.img}`} alt={selectedAdmin.name} />
+                  <img
+                    src={`/uploads/${selectedAdmin.img}`}
+                    alt={selectedAdmin.name}
+                  />
                   <div>
                     <h3>{selectedAdmin.name}</h3>
                     <p className="muted">{selectedAdmin.email}</p>
@@ -258,30 +315,80 @@ const ManageAdmin = () => {
                 </div>
 
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="icon-btn" onClick={() => navigate(`/admin/edit-admin/${selectedAdmin.id}`)}>Edit</button>
-                  <button className="icon-btn delete" onClick={() => openDeleteModal(selectedAdmin)}>Delete</button>
-                  <button className="close-btn" onClick={closeDetailModal}>Close</button>
+                  <button
+                    className="icon-btn"
+                    onClick={() =>
+                      navigate(`/admin/edit-admin/${selectedAdmin.id}`)
+                    }
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="icon-btn delete"
+                    onClick={() =>
+                      openDeleteModal(selectedAdmin)
+                    }
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="close-btn"
+                    onClick={closeDetailModal}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
 
               <div className="detail-modal-body">
-                <div className="detail-row"><strong>Phone:</strong> {selectedAdmin.number || "—"}</div>
-                <div className="detail-row"><strong>Status:</strong> {selectedAdmin.status}</div>
-                <div className="detail-row"><strong>Added:</strong> {selectedAdmin.createdat?.slice(0, 10) || "—"}</div>
-                <div className="detail-row"><strong>About:</strong> <div style={{ marginTop: 6 }}>{selectedAdmin.about || "—"}</div></div>
+                <div className="detail-row">
+                  <strong>Phone:</strong> {selectedAdmin.number || "—"}
+                </div>
+                <div className="detail-row">
+                  <strong>Status:</strong> {selectedAdmin.status}
+                </div>
+                <div className="detail-row">
+                  <strong>Added:</strong>{" "}
+                  {selectedAdmin.createdat?.slice(0, 10) || "—"}
+                </div>
+                <div className="detail-row">
+                  <strong>About:</strong>
+                  <div style={{ marginTop: 6 }}>
+                    {selectedAdmin.about || "—"}
+                  </div>
+                </div>
               </div>
 
               <div className="detail-modal-footer">
-                <button className="primary-btn" onClick={() => navigate(`/admin/edit-admin/${selectedAdmin.id}`)}>Edit</button>
-                <button className="cancel-btn" onClick={() => openDeleteModal(selectedAdmin)}>Delete</button>
-                <button className="info-btn" onClick={() => setSelectedAdmin(null)}>Close</button>
+                <button
+                  className="primary-btn"
+                  onClick={() =>
+                    navigate(`/admin/edit-admin/${selectedAdmin.id}`)
+                  }
+                >
+                  Edit
+                </button>
+                <button
+                  className="cancel-btn"
+                  onClick={() =>
+                    openDeleteModal(selectedAdmin)
+                  }
+                >
+                  Delete
+                </button>
+                <button
+                  className="info-btn"
+                  onClick={() => setSelectedAdmin(null)}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* Delete Confirm Modal (random-code modal) */}
+      {/* Delete Confirm Modal */}
       <DeleteConfirmModal
         isOpen={deleteModalOpen}
         onClose={() => {
@@ -292,7 +399,12 @@ const ManageAdmin = () => {
         selected={selectedToDelete}
       />
 
-      <ToastContainer position="top-right" autoClose={2500} hideProgressBar theme="colored" />
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar
+        theme="colored"
+      />
     </>
   );
 };
