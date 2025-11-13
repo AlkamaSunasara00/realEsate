@@ -11,7 +11,6 @@ function InvoiceModal({ payment, clientInfo, property, adminId, onClose, refresh
   const [showReject, setShowReject] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const [confirmDate, setConfirmDate] = useState(new Date().toISOString().slice(0, 16));
-  const API_ROOT = "http://localhost:4500";
 
   const handleConfirm = async () => {
     if (sigCanvas.current.isEmpty()) {
